@@ -1,0 +1,9 @@
+# The tracker is two CSVs split by writer — applications.csv (local batch
+# sessions: append rows, set Status) and outcomes.csv (the email-check routine:
+# Outcome columns) — so the two writers never touch the same file and git merges
+# them as ordinary text. No merge driver needed.
+#
+# Pin LF: both files are written with \n and exactly one physical line per
+# record, which is what makes git's line-level merge map 1:1 onto records.
+# Letting autocrlf rewrite them would turn every commit into a whole-file diff.
+application/*.csv text eol=lf

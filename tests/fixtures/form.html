@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>bh_helpers fixture</title>
+<style>
+  body { font: 14px sans-serif; margin: 20px; }
+  .row { margin: 8px 0; }
+  .sr-only { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .box { display: inline-block; width: 14px; height: 14px; border: 1px solid #333; }
+  #shim { position: fixed; inset: 0; background: rgba(0,0,0,.2); z-index: 10; }
+  #far { position: absolute; top: 2600px; left: 20px; }
+</style></head>
+<body>
+<form id="f">
+  <div class="row"><label for="first">First name *</label> <input id="first" name="first_name" required></div>
+  <div class="row"><span id="ln-label">Last name</span> <input id="last" aria-labelledby="ln-label"></div>
+  <div class="row"><input id="city" placeholder="City"></div>
+  <div class="row"><label for="postal">Postal code</label> <input id="postal" value="12345"></div>
+  <div class="row"><label for="email">E-Mail *</label> <input id="email" type="email" value="old@example.com"></div>
+  <div class="row"><label for="salary">Salary</label> <input id="salary" type="number" value="1000"></div>
+  <div class="row"><label for="motivation">Motivation</label> <textarea id="motivation">old text</textarea></div>
+  <div class="row"><label for="country">Country</label>
+    <select id="country"><option value="">Select...</option><option value="br">Christian Brothers University</option>
+      <option value="other">Other</option><option value="de">Germany</option><option value="in" disabled>India (disabled)</option></select></div>
+  <div class="row"><label class="cb"><input type="checkbox" id="agree" class="sr-only" required><span class="box"></span> I agree to the privacy notice *</label></div>
+  <div class="row"><label for="locked">Locked</label> <input id="locked" value="x" disabled></div>
+  <div class="row" style="display:none"><label for="gone">Gone</label> <input id="gone"></div>
+  <input type="hidden" id="csrf" value="t0k3n">
+  <div class="row"><label for="pw">Password</label> <input id="pw" type="password" value="secret123"></div>
+  <div class="row"><label for="cv">CV</label> <input id="cv" type="file" style="display:none"></div>
+  <div class="row"><div id="rb" role="button" tabindex="0" aria-label="Role button">Role button</div></div>
+  <div class="row"><div id="ce" contenteditable="true" aria-label="Rich text" style="border:1px solid #999;min-height:20px">old rich</div></div>
+  <div class="row"><input id="react" aria-label="React field" aria-invalid="true"></div>
+  <div class="row"><div role="checkbox" id="card" aria-checked="false" style="display:inline-block;width:14px;height:14px;border:1px solid #333"></div> B Intermediate</div>
+  <div class="row"><button type="button" id="covered">Covered button</button></div>
+  <div class="row"><shadow-field id="sf"></shadow-field></div>
+  <div class="row"><iframe id="ifr" srcdoc="<input id=inner aria-label=InsideFrame>" style="height:40px"></iframe></div>
+  <div id="err" role="alert">Please correct the errors below.</div>
+  <button type="button" id="far">Far submit</button>
+</form>
+<div id="shim"></div>
+<script>
+  window.log = [];
+  window.inputEvents = 0;
+  const react = document.getElementById('react');
+  react.addEventListener('input', () => window.inputEvents++);
+  for (const id of ['covered', 'far', 'rb']) document.getElementById(id).addEventListener('click', () => window.log.push(id));
+  document.getElementById('agree').addEventListener('change', e => window.log.push('agree:' + e.target.checked));
+  document.getElementById('country').addEventListener('change', e => window.log.push('country:' + e.target.value));
+  // The shim covers the page like SuccessFactors' orphaned .overlayShim; it is removed by the test.
+  document.getElementById('shim').className = 'overlayShim';
+  customElements.define('shadow-field', class extends HTMLElement {
+    constructor() {
+      super();
+      const r = this.attachShadow({mode: 'open'});
+      r.innerHTML = '<label for="sin">Shadow input *</label> <input id="sin" required> <button id="sbtn" type="button">Shadow button</button>';
+      r.getElementById('sbtn').addEventListener('click', () => window.log.push('sbtn'));
+    }
+  });
+  window.raf = 0; (function t() { window.raf++; requestAnimationFrame(t); })();
+</script>
+</body></html>

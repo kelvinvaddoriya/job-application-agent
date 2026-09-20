@@ -1,0 +1,5 @@
+# Only needed by the document scripts (mkpkg.py, make_cover_letter.py).
+# The tracker, discovery and browser helpers are stdlib-only.
+python-docx
+pypdf
+Pillow
