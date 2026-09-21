@@ -2,9 +2,12 @@
 # Runs INSIDE browser-harness against tests/fixtures/form.html, opened in a background tab of the real Chrome:
 #     browser-harness < tests/bh_selftest.py
 # ASCII-only on purpose (stdin may be read as cp1252); umlauts are written as \u escapes.
-import json, time
+import json, os, time
 
-ROOT = "<REPO>"
+# Repo root: this file's grandparent, so the test runs from any checkout. Override
+# with JOBAGENT_ROOT if your harness execs scripts with a different __file__.
+ROOT = os.environ.get("JOBAGENT_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = ROOT.replace("\\", "/")
 exec(open(ROOT + "/scripts/bh_helpers.py", encoding="utf-8").read())
 
 results = []
