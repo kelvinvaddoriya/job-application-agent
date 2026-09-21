@@ -29,11 +29,10 @@ Cross-portal rules. **This section is the once-per-batch read** — it stops at 
 ### 1. Hard rules
 
 - Never invent experience, skills, or facts not in `application/resume.md`. A missing required
-  fact — Abiturnote, German 0.7–6.0 grade, GitHub URL — is `NeedsUser` or `Skipped`, never a guess.
-  (the user's LinkedIn **and GitHub** URLs are verifiable facts and may be used - both are hyperlinks inside
-  `application/CV/Ai/CV_<Name>.pdf`: `https://linkedin.com/in/<handle>`,
-  `https://github.com/<handle>`, plus `https://<your-site>`. This corrects the older
-  "the GitHub URL does not exist" note. Extract them with pypdf `/Annots -> /A -> /URI`, never guess.)
+  fact — a grade on a scale you have no equivalent for, a profile URL, a reference — is
+  `NeedsUser` or `Skipped`, never a guess. Profile URLs (LinkedIn, GitHub, portfolio) are
+  verifiable facts and may be used **as written in `resume.md` § Candidate**; never reconstruct
+  one from a handle, and never submit a URL you have not seen resolve.
 
 - Never enter or set passwords, never create accounts, never use SSO / "Sign in with Google".
 
@@ -44,11 +43,18 @@ Cross-portal rules. **This section is the once-per-batch read** — it stops at 
 
 - Upload only files from the job's own `Application_Packages/` folder.
 
-- Answer every eligibility and language question truthfully: Deutsch B1 (Grundkenntnisse / "B1-B2
-  Good"; on a 4-level scale with no B1 rung, pick *Grundlagen*, never *Gut*), Englisch C1,
-  work permit Yes, visa sponsorship now/future Yes (non-EU Indian), 18+ Yes.
-  A truthful sub-requirement answer is often a soft warning, not a hard gate — submit anyway
-  and let the employer decide.
+- **One email address, on every platform.** Every portal profile, every account, every
+  email-only application uses the single address in `resume.md` — and it must be the mailbox
+  the agent can actually read. A portal registered under a second address still works, but its
+  confirmations land where VERIFY cannot see them, so the batch-end sweep silently skips it and
+  a submitted application looks unsent. If you find a portal profile on another address, fix
+  the profile; do not work around it per-application.
+
+- **Answer every eligibility and language question truthfully, from `resume.md` § Languages and
+  § Work Authorization.** Never round a language level up: on a 4-level scale with no rung for
+  your actual CEFR level, pick the one *below*, never the one above. A truthful answer that looks
+  like a disadvantage is often a soft warning rather than a hard gate — submit anyway and let the
+  employer decide. A question `resume.md` does not answer is `NeedsUser`, not a guess.
 
 - Re-applying to a company that rejected you is fine. Re-applying to **the same role** you were
   rejected for is a hard skip, even when the employer reposts it.
@@ -251,9 +257,10 @@ Yield is decided almost entirely by which channel the role lives on. Classify fi
 - **Portals that send no confirmation mail** (the on-page thank-you + `confirmation.png` is the
   proof): HELLA/csod, softgarden, Rohde & Schwarz, q23, several own-site forms.
 
-- **Two mailboxes the Gmail tool cannot see:** LinkedIn confirmations go to
-  `you.alt2@example.com`, Siemens to `you.alt@example.com`. Verify those on the
-  portal's own success page instead.
+- **A portal whose profile email is not your `JOBAGENT_EMAIL` is invisible to this check.**
+  Its confirmations land in a mailbox the agent cannot read, so the batch-end sweep silently
+  passes over it. Fix the portal's profile email; until then, verify that portal on its own
+  success page instead, and note it here.
 
 - **After a handoff comes back "done", verify each one against Gmail AND the tab's URL** before
   writing `Submitted`. One in three has come back done-but-not-sent (a reverted CHECK24 form, an
@@ -323,7 +330,7 @@ Dated cross-portal lessons behind the rules above, by topic, newest last. Grep o
 
 - 2026-07-19 — XING dedupe is the bottleneck, not discovery: of the 5 best XING finds, 4 were dupes only caught by reading the prior tracker rows — Silver Atena (same XING id 155744844, already Skipped stale + CAP_REACHED), **CROWN Gabelstapler GmbH = "Crown Equipment Corporation"** (same thesis role already Submitted under a different legal name), MTU (same role the user explicitly dropped 2026-07-14), Krones (prior row records "sehr gute Deutschkenntnisse" gate that is only on the official page, not XING). Rule: XING lists employers under alternate legal names — always read the matched tracker rows' Position text, never trust the company-name check verdict alone.
 
-- 2026-08-15 (duplicate-send post-mortem, the user: "why were they sent twice?") — **Clar AI, Next Intelligence and Hutter und Unger were each emailed TWICE** (18.07+12.08, 24.07+12.08, 07.08+12.08). Root cause is the email handoff itself: the agent creates the Gmail draft and *the user* sends it, so the send happens outside the agent's view and nothing ever flips the row — it stays `NeedsUser` with notes "send email - Gmail draft rXXXX", which reads to the next backlog-drain as *not yet sent*, so a new draft gets written and goes out again. The 12.08 sends were 25s apart (one drain pass) and that session ALSO failed to log them, which is why they were still `NeedsUser` on 15.08. **This exact gap was already written up on 2026-07-14 (goaudio, emailed 01.07 + 14.07) and the written rule did not hold — so it is now enforced in code, not prose.** Two fixes: (1) **a handed-off draft is logged `--status Submitted --outcome Awaiting --portal "email:<recipient>"`, never `NeedsUser`** — the application is out of the agent's hands at handoff and there is nothing left for a later batch to do; (2) **`tracker.py check` now prints an EMAIL GATE** (recipient + the exact `in:anywhere to:<addr>` query) for any company with an email-channel row, and a new **`tracker.py emails`** subcommand lists every email row with one combined Gmail query — 0 sent messages = a handoff the user never sent, 2+ = a duplicate. The optimistic `Submitted` is safe precisely because `emails` closes the loop the other way. Detector note: matching any address anywhere in Portal/Notes flagged **71 rows, nearly all ATS confirmation SENDERS** (no-reply@concludis, system@successfactors, *@myworkday) plus the user's alternate `you.alt@example.com ` inbox — an email-channel row must *declare* itself via `Portal: email:<addr>` or an explicit send-email marker in Notes. Also found and fixed a second dedupe hazard in the same rows: the Clar AI row was filed under company **"Early-Stage AI Startup (Munich)"**, which no future `check "Clar AI"` would ever match (`update --newcompany` added for renames). **Rule: for any email-only application, the Gmail sent folder is the authority on whether it went out — the tracker is only a claim.**
+- 2026-08-15 (duplicate-send post-mortem, the user: "why were they sent twice?") — **Clar AI, Next Intelligence and Hutter und Unger were each emailed TWICE** (18.07+12.08, 24.07+12.08, 07.08+12.08). Root cause is the email handoff itself: the agent creates the Gmail draft and *the user* sends it, so the send happens outside the agent's view and nothing ever flips the row — it stays `NeedsUser` with notes "send email - Gmail draft rXXXX", which reads to the next backlog-drain as *not yet sent*, so a new draft gets written and goes out again. The 12.08 sends were 25s apart (one drain pass) and that session ALSO failed to log them, which is why they were still `NeedsUser` on 15.08. **This exact gap was already written up on 2026-07-14 (goaudio, emailed 01.07 + 14.07) and the written rule did not hold — so it is now enforced in code, not prose.** Two fixes: (1) **a handed-off draft is logged `--status Submitted --outcome Awaiting --portal "email:<recipient>"`, never `NeedsUser`** — the application is out of the agent's hands at handoff and there is nothing left for a later batch to do; (2) **`tracker.py check` now prints an EMAIL GATE** (recipient + the exact `in:anywhere to:<addr>` query) for any company with an email-channel row, and a new **`tracker.py emails`** subcommand lists every email row with one combined Gmail query — 0 sent messages = a handoff the user never sent, 2+ = a duplicate. The optimistic `Submitted` is safe precisely because `emails` closes the loop the other way. Detector note: matching any address anywhere in Portal/Notes flagged **71 rows, nearly all ATS confirmation SENDERS** (no-reply@concludis, system@successfactors, *@myworkday) plus the user's own alternate inbox — an email-channel row must *declare* itself via `Portal: email:<addr>` or an explicit send-email marker in Notes. Also found and fixed a second dedupe hazard in the same rows: the Clar AI row was filed under company **"Early-Stage AI Startup (Munich)"**, which no future `check "Clar AI"` would ever match (`update --newcompany` added for renames). **Rule: for any email-only application, the Gmail sent folder is the authority on whether it went out — the tracker is only a claim.**
 
 - 2026-08-22 — **The 90-day company cap now counts only STILL-OPEN applications; a rejection or ghosting frees the slot and waives the cap** (the user's rule). Implemented in `tracker.py` as `is_closed()`, which checks **both** `Status` and `Outcome` — that mattered: **67 rows carried a terminal `Outcome=Rejected` while `Status` was still the employer-facing value from submit time**, and every one of them had been silently eating a cap slot. the user's two calls on the edges: (a) the waiver does **not** apply when 2+ applications are still genuinely open — that is the spam case the cap exists for, so `CAP_REACHED` stands; (b) `Ghosted` discharges a slot the same way `Rejected` does, since a no-reply application is dead in practice. **The bigger finding while implementing it: most `CAP_REACHED` verdicts were never coming from the row statuses at all.** `cap = max(recent, recent_pkgs)` also counts matching `Application_Packages/` folders, and that matcher is fuzzy — `Siemens Energy`'s count of 4 included `Arteus_Energy` and `SFC_Energy`, two unrelated companies, and Mercedes/AUDI were folder-driven too. The waiver now clears a folder-driven cap as well, and `check` prints `open employer-facing <=90d: N (+M pkg folders)` so the two signals are no longer conflated in one number. **Rule: `(+M pkg folders)` is a hint that something may be unlogged, not a count of real applications — read the rows.** Net effect on the current sheet: Mercedes, AUDI, Siemens Energy, CROWN, Xsolla, ICB, MESSRING, elunic and ABEL all flip from `CAP_REACHED` to `OK`; the cap still fires for the 4 companies with 2+ open rows (Retorio, Ströer Content, Clar AI, Himbeer Media) — verified both directions. Unchanged: re-applying to a company that rejected you is fine, but re-applying to **the same role** you were rejected for is still a hard skip (CROWN, 2026-08-19).
 
@@ -2071,7 +2078,7 @@ Guest apply form via StepStone phantom -> Unternehmenswebsite. Field names candi
 
 - GDPR consent on the Additional Questions page = first checkbox in the modal (second is the job-alert toggle — leave it). Click its label by coordinates.
 
-- Success = "Your application was sent to <company>!" overlay; the job page's Applied badge may lag. **Since 2026-07-24 the LinkedIn account email is `you@example.com` (primary)** — confirmations are visible to the batch-end Gmail check. (Before that date they went to `you.alt2@example.com`; earlier dated notes reflect that.)
+- Success = "Your application was sent to <company>!" overlay; the job page's Applied badge may lag. **Check that the LinkedIn account email is your `JOBAGENT_EMAIL`** — if it is some other address, EasyApply confirmations never reach the batch-end check and the overlay is your only proof.
 
 - (2026-09-02) **LinkedIn's logged-in UI needs the window un-wedged before it renders at all.** `document.hidden === true`
   left the Ember app stuck in `app-loader--default`: 1.35 MB of HTML, `document.body.innerText.length === 0`,
@@ -2553,7 +2560,7 @@ success = `/applySuccess?aid=<uuid>`.
 
 *Common Quirks*
 
-- **The profile email is `you@example.com` (primary Gmail) since 2026-07-24** — StepStone confirmations now land in the inbox the Gmail MCP can read, so the batch-end email check DOES cover StepStone. (Before 2026-07-24 it was `you.alt2@example.com`; notes below dated earlier reflect that old setup.)
+- **Check the StepStone profile email.** Smart-apply locks the E-Mail field to whatever the profile holds, greyed out and uneditable — so if that is not your `JOBAGENT_EMAIL`, every StepStone confirmation lands somewhere the batch-end check cannot read, and the `/confirmation/success?applicationId` page plus `confirmation.png` are your only proof. Fix it once in the profile and the whole portal is covered.
 
 - Detail pages show a "Passt hervorragend/weniger" fit badge computed against the uploaded Lebenslauf — use it as a pre-filter; skip "weniger" without opening.
 
@@ -2583,7 +2590,7 @@ success = `/applySuccess?aid=<uuid>`.
 
 - 2026-07-21 — **Smart-apply "Zusätzliche Fragen" (Aktion erforderlich)** block the button until answered. Seen at FLECS: (1) **Deutschkenntnisse*** = 7-option `<select>` (Keine/Grundkenntnisse/Gute/Fließend/Verhandlungssicher/Muttersprache) → set `Grundkenntnisse` for B1 (truthful, does NOT gate submit); (2) **frühestmögliches Startdatum** = `input[type=date]` (name `atsiQuestions.id:<n>.id:<n>`) → set `2026-08-01` (yyyy-mm-dd); (3) **"aktuelle Erlaubnis in Deutschland zu arbeiten?"** = unnamed radio pair value `TRUE`/`FALSE` → check `TRUE` (has student permit). Set select/date via native setter; radio via `checked` native-setter + click/change event. Section flips off "Aktion erforderlich" and button enables.
 
-- 2026-07-21 — ~~**`.kv` vs primary email on smart-apply**: the read-only greyed E-Mail field is locked to `you.alt2@example.com` (StepStone profile email) — that's where StepStone confirmations land, NOT the primary Gmail the MCP can read.~~ **SUPERSEDED 2026-07-24:** the profile email is now the primary Gmail, so the greyed E-Mail field reads `you@example.com` and confirmations are readable at the batch-end check. The `/confirmation/success?applicationId` page + `confirmation.png` remain the primary proof; the email is now a second, independent check.
+- **The greyed-out E-Mail field on smart-apply is the profile email and cannot be edited in the form** — it is the single clearest demonstration of why one address everywhere matters: you cannot correct it per-application, only in the profile.
 
 - 2026-07-22 - **Two-stage smart-apply (mirage.at-ats.com)**: on some employer-direct postings the StepStone smart-apply form is only stage 1. After clicking "Bewerbung abschicken" the page shows "Wir bereiten Ihre Bewerbung vor" for ~20-40s, then navigates to `mirage.at-ats.com/?conversationUuid=...&jb=stepstone_de&ou=<base64 employer apply URL>` which hosts the employer's REAL form (TK Elevator -> jobs.tkelevator.com). Fill that second form too; only its submit produces `/application/confirmation/success?...&applicationId=<uuid>&status=SUCCESS` back on stepstone.de. Do NOT treat the stage-1 click as submitted. Second-form fields seen at TK: `first_name`/`last_name`/`e-mail_address` prefilled, `custom_question_*` (Wunscheinkommen = **numeric only**, Kuendigungsfrist optional), two required `<select>` (Wie aufmerksam geworden -> StepStone option value ends `_stepstone_de`; Mitarbeiter-Empfehlung -> `_nein`), a free `input[type=file]` for the CV, and TWO `name="dps"` selects: dps[0] required = `true` (application processing), dps[1] optional marketing = `false` (decline).
 
@@ -2629,7 +2636,6 @@ After an `/error`, StepStone permanently re-routes that job externally.
 
 - 2026-07-01 — Some StepStone postings ("Hat mit deiner Bewerbung alles geklappt?" page) are external redirects, not smart-apply: Charles Real Estate → Kenjo (numeric-only salary field, CV-only upload), igus → rexx-systems (hidden file inputs upload via AJAX and clear themselves — check page text for the filename, not input.files; consent checkbox agbs_check required).
 
-- 2026-07-01 — StepStone profile email is you.alt2@example.com (not the main gmail) — replies to StepStone applications go there.
 
 - 2026-07-01 — StepStone fit badge ("Passt hervorragend") as pre-filter; check German postings' language line FIRST (~half die on C1 requirements).
 

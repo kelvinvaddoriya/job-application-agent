@@ -86,9 +86,12 @@ NOT_RECIPIENT = ("noreply", "no-reply", "donotreply", "do-not-reply", "system@",
                  "notification@", "notifications@", "antwort@", "@myworkday.com",
                  "@successfactors.com", "@successfactors.eu", "@m.personio.com",
                  "@app.softgarden.io")
-# Your own addresses, so `emails` does not read a self-addressed row as a recipient.
-# Set JOBAGENT_OWN_EMAIL to a regex matching your local-part(s).
-OWN_RX = re.compile(os.environ.get("JOBAGENT_OWN_EMAIL", r"(?!)"), re.I)
+# Your own address(es), so `emails` does not read a self-addressed row as a
+# recipient. Same JOBAGENT_EMAIL the rest of the project uses - one address
+# everywhere is the rule (see README "One email, everywhere").
+_OWN = [e for e in (os.environ.get("JOBAGENT_EMAIL", ""),
+                    os.environ.get("JOBAGENT_EMAIL_FALLBACK", "")) if e]
+OWN_RX = re.compile("|".join(re.escape(e) for e in _OWN) if _OWN else r"(?!)", re.I)
 
 
 def norm(name):

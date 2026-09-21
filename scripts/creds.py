@@ -32,11 +32,12 @@ WHAT A HIT PROVES depends on the portal's URL shape:
     for a different company. A hit proves nothing until you submit the login
     and read the result (Funke and SIGNAL IDUNA both autofilled, both failed).
 
-IDENTITY PRECEDENCE (the user, 2026-08-31): there are two addresses, one letter
-apart. ALWAYS try you@example.com first. Only fall back to
-you.alt@example.com when the primary is actually rejected - not on a
-hunch, and not because the fallback is the one Chrome saved for that host.
-`check` orders and labels the saved identities accordingly.
+IDENTITY: apply under ONE address everywhere (JOBAGENT_EMAIL). `check` labels
+every saved username against it, so a portal account created under some other
+address shows up as UNKNOWN - which is the thing worth catching, because its
+confirmation emails land where the batch-end check cannot see them. If you are
+mid-consolidation, JOBAGENT_EMAIL_FALLBACK names the old address; the primary is
+still always tried first.
 
 AUTOFILL MECHANICS (do not re-derive these): it does NOT fire on page load, and
 `input.value` reads empty from JS until the user interacts with the page. Open
@@ -78,12 +79,16 @@ PLATFORM_SUFFIXES = ("myworkdayjobs.com", "successfactors.eu", "successfactors.c
                      "umantis.com", "ashbyhq.com", "icims.com", "dvinci-hr.com",
                      "greenhouse.io", "lever.co", "smartrecruiters.com", "personio.de")
 
-# Identity precedence (the user, 2026-08-31): ALWAYS try the primary first; only
-# fall back to the second address if the primary is rejected or unknown there.
-# The two differ by one letter and are easy to mix up.
-PRIMARY_EMAIL = "you@example.com"
-FALLBACK_EMAIL = "you.alt@example.com"
-IDENTITY_ORDER = [PRIMARY_EMAIL, FALLBACK_EMAIL]
+# ONE identity, everywhere. Set JOBAGENT_EMAIL to the single address you use for
+# every job platform - and make it the mailbox your agent can actually read, or
+# VERIFY is blind to half your confirmations (see README "One email, everywhere").
+#
+# JOBAGENT_EMAIL_FALLBACK exists only for the migration case: you already have
+# accounts under an older address and have not consolidated them yet. Leave it
+# unset once you have. Where both are saved, the primary is always tried first.
+PRIMARY_EMAIL = os.environ.get("JOBAGENT_EMAIL", "").lower()
+FALLBACK_EMAIL = os.environ.get("JOBAGENT_EMAIL_FALLBACK", "").lower()
+IDENTITY_ORDER = [e for e in (PRIMARY_EMAIL, FALLBACK_EMAIL) if e]
 
 
 def identity_rank(user):
@@ -93,11 +98,13 @@ def identity_rank(user):
 
 def identity_label(user):
     u = (user or "").lower()
+    if not IDENTITY_ORDER:
+        return "set JOBAGENT_EMAIL to rank identities"
     if u == PRIMARY_EMAIL:
         return "PRIMARY - try this first"
     if u == FALLBACK_EMAIL:
-        return "fallback - only if the primary is rejected"
-    return "other identity"
+        return "legacy fallback - only if the primary is rejected"
+    return "UNKNOWN identity - not the address you apply under"
 
 
 ATS_KEYS = ("myworkdayjobs", "successfactors", "sapsf", "taleo", "csod", "avature",
@@ -249,9 +256,11 @@ def cmd_check(args):
                  "+".join(stores), last or "never"))
         for u in users:
             print("  username: %-30s (%s)" % (u, identity_label(u)))
-        if PRIMARY_EMAIL not in [u.lower() for u in users]:
-            print("  ! the PRIMARY address is NOT saved here. Still try %s first; "
-                  "use %s only if it is rejected." % (PRIMARY_EMAIL, users[0]))
+        if PRIMARY_EMAIL and PRIMARY_EMAIL not in [u.lower() for u in users]:
+            print("  ! %s is NOT saved here - this account was made under a different "
+                  "address, so its confirmations land in a mailbox the batch-end check "
+                  "may not read. Still try the primary first; use %s only if rejected."
+                  % (PRIMARY_EMAIL, users[0]))
         if shared:
             print("VERDICT: WEAK. Every employer shares this hostname (the tenant is a "
                   "?company= param), so the saved credential may belong to a different "

@@ -110,7 +110,37 @@ project bloated past its context budget the first time.
 - Windows only for `docx2pdfa.ps1` (Word COM) and the scheduled-task scripts; everything else is
   cross-platform
 
-### 2. Fill in your resume
+### 2. One email, everywhere
+
+**Pick a single email address and use it for every job platform, every portal account, every
+email-only application — and make it the mailbox your agent can read.** Export it before a batch:
+
+```bash
+export JOBAGENT_EMAIL="you@example.com"
+# only while consolidating old accounts; unset it once you have:
+export JOBAGENT_EMAIL_FALLBACK="old@example.com"
+```
+
+This sounds like housekeeping and is actually load-bearing. VERIFY treats your inbox as the
+authority on whether an application went out, because portal "application sent" screens lie. An
+account registered under a second address still submits fine — but its confirmations land in a
+mailbox the agent cannot read, so the batch-end sweep skips it silently and a successful
+application looks unsent. You then re-apply, and the employer gets it twice.
+
+It is also hard to undo. StepStone's smart-apply locks the E-Mail field to the profile address,
+greyed out and uneditable, so you cannot correct it per-application — only in the profile, and
+only for applications you have not sent yet.
+
+Two consequences worth making explicit:
+
+- **The same address must be the one your agent's mail connector is attached to.** If you use the
+  optional email-check routine (step 6), it sweeps *that* mailbox; a confirmation anywhere else is
+  invisible to it, and the tracker's Outcome column stays empty forever.
+- `creds.py check` labels every saved portal username against `JOBAGENT_EMAIL` and flags anything
+  else as an UNKNOWN identity. That flag is how you find the accounts you registered under an old
+  address before they cost you a duplicate submission.
+
+### 3. Fill in your resume
 
 ```bash
 cp application/resume.md application/resume.md.bak   # keep the template around
@@ -121,7 +151,7 @@ This is the step people skip and then wonder why applications come out generic. 
 every cover letter traces back to a line in this file, and a field with no answer here stops the
 batch with `NeedsUser` rather than being invented.
 
-### 3. Add your documents
+### 4. Add your documents
 
 - `application/CV/primary/` — your designed CV, one per language. The English one must start
   `CV_`, the German one `Lebenslauf_`; the rest of the filename is yours
@@ -133,7 +163,7 @@ batch with `NeedsUser` rather than being invented.
 All three folders are gitignored. **Keep them that way** — this repo is meant to be public, your
 paperwork is not.
 
-### 4. Initialize
+### 5. Initialize
 
 ```bash
 python scripts/setup_hooks.py
@@ -144,7 +174,7 @@ this runs once per clone.
 
 The two tracker CSVs ship with just their header row; `tracker.py add` fills them.
 
-### 5. Optional: the daily email check
+### 6. Optional: the daily email check
 
 `outcomes.csv` is designed to be written by a separate scheduled agent that sweeps your inbox for
 replies, classifies each one (Offer > Interview > Rejection > Update > Acknowledged), and pushes
@@ -154,7 +184,7 @@ That routine is not included — it needs mailbox access, so it is yours to set 
 must honour: read `application/applications.csv`, write **only** `application/outcomes.csv` through
 `tracker.py update --outcome`, never create rows, never force-push.
 
-### 6. Run a batch
+### 7. Run a batch
 
 Point your agent at the repo and say so. It reads `CLAUDE.md`, which routes it through the prompts.
 
@@ -181,7 +211,8 @@ edited. The things you will actually want to change:
 | `scripts/li_jobs.py` → `DEFAULT_KW`, `BAD_TITLE`, `TECH` | The discovery sweep's keyword and filter regexes |
 | `scripts/mkpkg.py` → `DOCS` | Your supporting-document filenames |
 | `prompts/coverletter.md` | Letter structure, length, banned openers, template paths |
-| `JOBAGENT_OWN_EMAIL` env var | Regex matching your own email local-part, so `tracker.py emails` does not read a self-addressed row as a recipient |
+| `JOBAGENT_EMAIL` env var | The single address you apply under. `creds.py` ranks saved logins against it; `tracker.py emails` uses it to tell your own address from a recipient |
+| `JOBAGENT_EMAIL_FALLBACK` env var | An older address you still have portal accounts under. Unset it once consolidated |
 
 ---
 
@@ -224,7 +255,7 @@ Yours will accumulate as you run.
   entire resume hardcoded into them. `make_cover_letter.py` (fill a .docx template) and
   `docx2pdfa.ps1` (the PDF/A conversion that portals actually accept) are included because they
   are generic; the tailored-CV builders are not.
-- **The email-check routine** — see step 5.
+- **The email-check routine** — see step 6.
 - **Credentials of any kind.** `creds.py` reads Chrome's password stores for *origins and usernames
   only*; it never reads, decrypts or prints an encrypted password, and the agent never types one.
 

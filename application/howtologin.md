@@ -11,7 +11,7 @@ File a new lesson with `python scripts/addlesson.py login "<Portal>" "<Company|G
 
 *General Login Rules*
 
-1. **Credentials** — Use only the credentials from the designated credentials file. Never invent or guess passwords. **Before any login attempt run `python scripts/creds.py check <job-url>`**: it reports whether Chrome has a saved credential for that host, which identity it is under. **Two addresses exist, one letter apart: always try `you@example.com` FIRST, and fall back to `you.alt@example.com` only after the primary is actually rejected** — including on hosts where Chrome saved only the fallback (e.g. Avature `jobs.siemens.com`), and whether the host is per-tenant (a hit proves an account) or shared (a hit proves nothing until the login is submitted). Record the outcome with `creds.py note`.
+1. **Credentials** — Use only the credentials from the designated credentials file. Never invent or guess passwords. **Before any login attempt run `python scripts/creds.py check <job-url>`**: it reports whether Chrome has a saved credential for that host, which identity it is under. **Apply under ONE address everywhere** (`JOBAGENT_EMAIL`) — `check` flags a saved username that is not it, because an account created under some other address sends its confirmations to a mailbox the batch-end check cannot read. `check` also says whether the host is per-tenant (a hit proves an account) or shared (a hit proves nothing until the login is submitted). Record the outcome with `creds.py note`.
 
 2. **Prefer guest/no-account paths** — If a site allows applying without login, skip login entirely.
 
@@ -524,7 +524,7 @@ StepStone profile login (the user is typically already logged in):
 
 1. Click **"Anmelden"** in the top-right corner.
 
-2. Enter email: `you@example.com` (primary Gmail — profile email changed 2026-07-24, previously the `.kv` address).
+2. Enter email: your `JOBAGENT_EMAIL` address.
 
 3. Enter password.
 
