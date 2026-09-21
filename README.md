@@ -246,7 +246,8 @@ edited. The things you will actually want to change:
 | `prompts/evaluator.md` | The 0–10 scoring weights, the apply threshold, the per-company cap |
 | `scripts/li_jobs.py` → `DEFAULT_KW`, `BAD_TITLE`, `TECH` | The discovery sweep's keyword and filter regexes |
 | `scripts/mkpkg.py` → `DOCS` | Your supporting-document filenames |
-| `prompts/coverletter.md` | Letter structure, length, banned openers, template paths |
+| `prompts/coverletter.md` | Letter structure, length, banned openers |
+| `JOBAGENT_LETTER_DE` / `_EN` env vars | Path to your .docx letterhead per language, used by `make_cover_letter.py` |
 | `JOBAGENT_EMAIL` env var | The single address you apply under. `creds.py` ranks saved logins against it; `tracker.py emails` uses it to tell your own address from a recipient |
 | `JOBAGENT_EMAIL_FALLBACK` env var | An older address you still have portal accounts under. Unset it once consolidated |
 

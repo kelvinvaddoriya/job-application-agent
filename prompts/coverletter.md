@@ -23,7 +23,9 @@ a copy of it with the five body paragraphs replaced.
 Copy it into the job's package folder, then edit with Python + python-docx (installed): update the date, recipient company/address block, subject line, and replace the five body paragraphs. Keep the header, contact block, fonts, and layout untouched.
 
 `scripts/make_cover_letter.py` does exactly this in one call (`build(pkg, recipient, subject, paras, lang="de"|"en")`)
-and prints the body word count. Write the calling script with the Write tool and run it with `PYTHONUTF8=1` —
+and prints the body word count. It takes the letterhead from `JOBAGENT_LETTER_DE` / `JOBAGENT_LETTER_EN`
+(or an explicit `tmpl=`), dates it today, and names the output after the template — so it fails loudly
+rather than writing a letter from the wrong language's template. Write the calling script with the Write tool and run it with `PYTHONUTF8=1` —
 umlauts typed into a bash heredoc are read as cp1252 and mangle.
 
 File names (always inside `Application_Packages/<Company>_<Role>/`):

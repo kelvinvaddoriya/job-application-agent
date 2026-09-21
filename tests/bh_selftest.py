@@ -54,7 +54,7 @@ try:
     check("id and name reported", ctl("First name *").get("id") == "first" and ctl("First name *").get("name") == "first_name",
           ctl("First name *"))
     check("label from placeholder", "City" in by, labels)
-    check("value reported", ctl("Postal code").get("value") == "<postcode2>", ctl("Postal code"))
+    check("value reported", ctl("Postal code").get("value") == "12345", ctl("Postal code"))
     check("textarea value", ctl("Motivation").get("value") == "old text", ctl("Motivation"))
     sel = ctl("Country")
     check("select value + options", sel.get("value") == "Select..." and "Other" in sel.get("options", []), sel)
@@ -110,8 +110,8 @@ try:
     check("shadow button click", safe_click(ctl("Shadow button")["n"]).get("ok") and js("window.log.includes('sbtn')"))
 
     # 4. safe_fill: replaces (never concatenates), all input kinds, events fire, unicode survives.
-    r = safe_fill(ctl("Postal code")["n"], "<postcode>")
-    check("prefilled value replaced, not concatenated", r == {"ok": True, "value": "<postcode>"}, r)
+    r = safe_fill(ctl("Postal code")["n"], "54321")
+    check("prefilled value replaced, not concatenated", r == {"ok": True, "value": "54321"}, r)
     r = safe_fill(ctl("E-Mail *")["n"], "you@example.com")
     check("email input replaced", r.get("ok"), r)
     r = safe_fill(ctl("Salary")["n"], "1300")

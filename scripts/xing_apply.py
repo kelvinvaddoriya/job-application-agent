@@ -51,7 +51,8 @@ def _step_text():
     return js(r"""document.body.innerText.replace(/\s+/g,' ').slice(0,260)""")
 
 
-def xing_apply(slug, cover_letter=None, answers=None, phone="<phone>", city="<your city>"):
+def xing_apply(slug, phone, cover_letter=None, answers=None):
+    # `phone` is required on purpose: a default would be typed into a real application.
     import json
     answers = answers or {}
     new_tab("https://www.xing.com/jobs/custom-apply/" + slug)

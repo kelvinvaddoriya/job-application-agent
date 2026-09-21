@@ -12,9 +12,11 @@ Prints the folder and its files. The cover letter is a separate step (scripts/ma
 import argparse, html, os, re, shutil, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DOCS = {"transcript": "TranscriptofRecords_<Name>.pdf", "immat": "Immatriculation_<Name>.pdf",
-        "zeugnis": "Arbeitszeugnisse_<Name>.pdf", "aufenthalt": "Aufenthaltstitel_<Name>.pdf",
-        "degree": "B_Tech_Degree_<Name>.pdf", "school": "HighSchoolReport_<Name>.pdf"}
+# Map --docs keys to YOUR filenames in "Other Docs/". Add, rename or delete rows freely;
+# keep the keys short, they are what you type at `mkpkg.py --docs transcript,immat`.
+DOCS = {"transcript": "TranscriptOfRecords.pdf", "immat": "EnrollmentCertificate.pdf",
+        "zeugnis": "References.pdf", "permit": "WorkPermit.pdf",
+        "degree": "DegreeCertificate.pdf", "school": "SchoolReport.pdf"}
 
 
 def compress_cv(path, max_kb):
