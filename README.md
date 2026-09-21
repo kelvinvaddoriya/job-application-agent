@@ -62,8 +62,8 @@ job-application-agent/
 │   ├── applications.csv       # tracker: what you applied to (written by batch sessions)
 │   ├── outcomes.csv           # tracker: what came back (written by the email routine)
 │   └── CV/
-│       ├── Ai/                # your designed CVs, EN + DE  (gitignored)
-│       └── Embedded/          # a second variant for a different role class
+│       ├── primary/           # your designed CVs, EN + DE  (contents gitignored)
+│       └── secondary/         # a second variant for a different role class
 ├── Other Docs/                # transcripts, certificates, references  (gitignored)
 ├── Application_Packages/      # one folder per job, built by mkpkg.py  (gitignored)
 ├── scripts/                   # every script the prompts call — see scripts/README.md
@@ -123,9 +123,10 @@ batch with `NeedsUser` rather than being invented.
 
 ### 3. Add your documents
 
-- `application/CV/Ai/` — your designed CV, one per language (`CV_<Name>.pdf`, `Lebenslauf_<Name>.pdf`)
-- `application/CV/Embedded/` — a second variant if you apply into two different role classes; rename
-  the folders to whatever your two classes are and update `prompts/evaluator.md`
+- `application/CV/primary/` — your designed CV, one per language. The English one must start
+  `CV_`, the German one `Lebenslauf_`; the rest of the filename is yours
+- `application/CV/secondary/` — a second variant if you apply into two different role classes. Say
+  which is which in `prompts/evaluator.md`; drop it if you only have one
 - `Other Docs/` — transcript, enrollment certificate, references; map the filenames in the `DOCS`
   dict at the top of `scripts/mkpkg.py`
 

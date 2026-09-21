@@ -3,8 +3,8 @@
     python scripts/mkpkg.py <Company_Role> <posting.txt | URL | -> <en|de> [--docs transcript,immat,zeugnis,aufenthalt,degree,school] [--max-cv-kb 450]
 
 - `-` keeps an existing job_posting.txt (e.g. one written by `ats_probe.py --save`).
-- en -> application/CV/Ai/CV_<Name>.pdf, de -> Lebenslauf_<Name>.pdf. Pass --cv-dir Embedded for
-  embedded roles. Never leave a designed and a generated CV side by side; this script only copies the designed one.
+- Copies the language-matched CV out of application/CV/<--cv-dir>/ (default `primary`): the single
+  CV_*.pdf for en, Lebenslauf_*.pdf for de. Pass --cv-dir secondary for your other role class. Never leave a designed and a generated CV side by side; this script only copies the designed one.
 - --max-cv-kb recompresses the CV photo (pypdf + Pillow) when a portal caps upload size (Micron/Eightfold: 488 KB).
   The compressed file keeps the normal CV name, so the package still holds exactly one CV.
 Prints the folder and its files. The cover letter is a separate step (scripts/make_cover_letter.py).
@@ -38,7 +38,7 @@ def compress_cv(path, max_kb):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("name"); ap.add_argument("src"); ap.add_argument("lang", choices=["en", "de"])
-    ap.add_argument("--docs", default=""); ap.add_argument("--cv-dir", default="Ai"); ap.add_argument("--max-cv-kb", type=int)
+    ap.add_argument("--docs", default=""); ap.add_argument("--cv-dir", default="primary"); ap.add_argument("--max-cv-kb", type=int)
     a = ap.parse_args()
     pkg = os.path.join(ROOT, "Application_Packages", a.name)
     os.makedirs(pkg, exist_ok=True)
@@ -49,12 +49,15 @@ def main():
         else:
             text = open(a.src, encoding="utf-8").read()
         open(os.path.join(pkg, "job_posting.txt"), "w", encoding="utf-8").write(text)
-    cv = "CV_<Name>.pdf" if a.lang == "en" else "Lebenslauf_<Name>.pdf"
-    dst = os.path.join(pkg, cv)
-    src = os.path.join(ROOT, "application", "CV", a.cv_dir, cv)
-    if not os.path.exists(src):  # Embedded/ names its files *_<Name>.pdf
-        src = src.replace("_the user_", "_the user_M_")
-    shutil.copy(src, dst)
+    # Whatever you named your CVs, as long as the English one starts CV_ and the
+    # German one Lebenslauf_. One match per language per folder, or this raises.
+    stem = "CV_" if a.lang == "en" else "Lebenslauf_"
+    cv_dir = os.path.join(ROOT, "application", "CV", a.cv_dir)
+    hits = sorted(f for f in os.listdir(cv_dir) if f.startswith(stem) and f.endswith(".pdf"))
+    if len(hits) != 1:
+        sys.exit("expected exactly one %s*.pdf in %s, found %s" % (stem, cv_dir, hits or "none"))
+    dst = os.path.join(pkg, hits[0])
+    shutil.copy(os.path.join(cv_dir, hits[0]), dst)
     if a.max_cv_kb:
         compress_cv(dst, a.max_cv_kb)
     for d in filter(None, a.docs.split(",")):

@@ -1,8 +1,12 @@
 # Personal documents — LOCAL ONLY. This repo is public; your paperwork is not.
-Application_Packages/
-Other Docs/
-application/CV/
+Application_Packages/*
+Other Docs/*
+application/CV/*/*
 Companies/
+# ...but ship the empty folder skeleton, so a fresh clone has somewhere to put things.
+!Application_Packages/.gitkeep
+!Other Docs/.gitkeep
+!application/CV/*/.gitkeep
 
 # Secrets / portal access notes — never push
 credentials.md

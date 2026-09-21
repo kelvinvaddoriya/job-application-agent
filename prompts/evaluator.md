@@ -17,7 +17,7 @@ Apply at **7 or higher**. 5–6 is borderline: qualify only if the batch has ope
 
 - Posting in German → German documents: `Lebenslauf_<Name>.pdf` + Anschreiben. German-only postings only if B1 is explicitly acceptable.
 - Posting in English → English documents: `CV_<Name>.pdf` + cover letter.
-- CV variant: `application/CV/Ai/` is the default for all AI / software / backend / cloud / mobile roles. `application/CV/Embedded/` only for embedded-systems roles.
+- CV variant: `application/CV/primary/` is the default. `application/CV/secondary/` only for the second role class you defined in `application/resume.md`.
 - Supporting documents (when the form asks) live in `Other Docs/` and are listed in `application/resume.md` § Supporting Documents; `mkpkg.py --docs transcript,immat` copies them in.
 
 ## Company cap

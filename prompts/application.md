@@ -28,7 +28,7 @@ Steps 1–3 and 5 in one call: `python scripts/mkpkg.py <Company_Job_Title> <pos
 
 1. Create `Application_Packages/<Company>_<Job_Title>/` (underscores, no spaces).
 2. Save the full job description as `job_posting.txt` in it.
-3. Copy the selected CV from `application/CV/Ai/` (or `Embedded/`) into it — the designed CV
+3. Copy the selected CV from `application/CV/primary/` (or `secondary/`) into it — the designed CV
    is the default. A German posting gets the German CV (`Lebenslauf_*.pdf`). If you tailor a CV
    for a job, never leave both the designed and the tailored copy in one package folder.
    **The CV never names the employer** — not in the headline, profile, file name, or by
