@@ -100,13 +100,49 @@ project bloated past its context budget the first time.
 
 ---
 
+## The browser layer
+
+**This is the one real dependency, and it is not bundled.** SEARCH and EVALUATE run without a
+browser (`li_jobs.py`, `ats_probe.py` are plain HTTP), but APPLY drives real forms, and
+`bh_helpers.py`, `xing_apply.py` and `tests/bh_selftest.py` are written against a harness that
+execs Python with these names already bound, talking to a real Chrome over CDP:
+
+```
+js(expr) -> value          cdp(method, **params) -> dict     press_key(key)
+fill_input(css, text)      click(css)                        goto_url(url)
+new_tab()                  switch_tab(n)                     list_tabs()
+upload_file(css, path)     screenshot(...)
+```
+
+`js` and `cdp` carry roughly 90% of the calls; the other eight are thin. The project was built
+against a local CLI called `browser-harness` that provides exactly this and is invoked as
+`browser-harness <<'PY' ... PY`. **If you do not have that, shim those ten names over whatever you
+do have** — Playwright, Puppeteer, or raw CDP — and everything above them works unchanged. The
+`section.py` / `tracker.py` / `mkpkg.py` half of the project has no browser dependency at all.
+
+Verify a shim with the self-test, which asserts ~60 behaviours against a local fixture:
+
+```bash
+browser-harness < tests/bh_selftest.py     # opens tests/fixtures/form.html
+```
+
+Why the helpers exist at all, rather than raw CDP calls: `feedback.md` § 6 is a list of ways a
+real ATS form defeats naive automation — a background tab making Chrome refuse every `Input.*`
+call, a native value-setter that concatenates instead of replacing, a consent overlay silently
+eating a click, shadow-DOM labels that no CSS selector reaches. `keep_rendering()`,
+`safe_click()`, `safe_fill()` and `form_snapshot()` are those lessons in code. Reimplementing the
+ten primitives is an afternoon; reimplementing the lessons is not.
+
+---
+
 ## Setup
 
 ### 1. Requirements
 
 - Python 3.10+ (`:=` and `match`-era syntax is used)
 - `pip install python-docx pypdf Pillow` — only for the document scripts
-- A coding agent that can run shell commands and drive a browser (Claude Code + a browser tool)
+- A coding agent that can run shell commands, plus a browser harness exposing the ten primitives in
+  "The browser layer" above (needed only for APPLY)
 - Windows only for `docx2pdfa.ps1` (Word COM) and the scheduled-task scripts; everything else is
   cross-platform
 

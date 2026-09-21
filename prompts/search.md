@@ -1,6 +1,6 @@
 # STATE = SEARCH
 
-Find Working Student / Internship / Master Thesis roles in Germany that match the resume. `application/resume.md` is the only source of truth on the candidate — never assume skills not in it. Load the `browser-harness` skill before any web interaction.
+Find Working Student / Internship / Master Thesis roles in Germany that match the resume. `application/resume.md` is the only source of truth on the candidate — never assume skills not in it. Load your browser tooling before any web interaction (see README, "The browser layer").
 
 ## Cheapest sources first
 

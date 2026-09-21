@@ -1,9 +1,16 @@
-"""Browser helpers for form filling inside `browser-harness`. Load at the top of a heredoc:
+"""Browser helpers for form filling. Load at the top of a heredoc:
 
     browser-harness <<'PY'
-    exec(open(r"<REPO>/scripts/bh_helpers.py", encoding="utf-8").read())
+    exec(open("scripts/bh_helpers.py", encoding="utf-8").read())
     print(li_apply_routes(["4464796918", "4467054846"]))
     PY
+
+REQUIRES a browser harness that execs Python with these names already bound, against a real
+Chrome over CDP:  js(expr) -> value | cdp(method, **params) -> dict | press_key(key) |
+fill_input(css, text) | click(css) | goto_url(url) | new_tab() | switch_tab(n) | list_tabs() |
+upload_file(css, path) | screenshot(...). `js` and `cdp` carry ~90% of the work; the rest are
+thin. Porting to another driver (Playwright, CDP directly) means shimming those ten names - see
+the README, "The browser layer".
 
 Every helper is JS-first and returns data instead of screenshots; `snap()` is the one budgeted screenshot.
 

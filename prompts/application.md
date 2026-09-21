@@ -4,7 +4,7 @@ Package, submit, and track one qualified job at a time.
 
 ## Submission rule
 
-**Auto-submit within a user-approved batch**; outside an approved batch, prepare drafts only. Always stop (never work around) at: MFA, CAPTCHA, payment, phone/SMS verification, suspicious redirects. Login walls: run `python scripts/creds.py check <job-url>` FIRST — it says whether Chrome holds a credential for that host and whether a hit is trustworthy; then read the portal's login section with `python scripts/section.py application/howtologin.md "<Portal>"` (or `"<Portal> — <Company>"`) — if it documents a working path (standard credentials, magic link, quick-apply account), follow it; otherwise record the blocker and move on. Never use SSO / "Sign in with Google" even if the browser is signed in — email + password only (this overrides the browser-harness skill's SSO note).
+**Auto-submit within a user-approved batch**; outside an approved batch, prepare drafts only. Always stop (never work around) at: MFA, CAPTCHA, payment, phone/SMS verification, suspicious redirects. Login walls: run `python scripts/creds.py check <job-url>` FIRST — it says whether Chrome holds a credential for that host and whether a hit is trustworthy; then read the portal's login section with `python scripts/section.py application/howtologin.md "<Portal>"` (or `"<Portal> — <Company>"`) — if it documents a working path (standard credentials, magic link, quick-apply account), follow it; otherwise record the blocker and move on. Never use SSO / "Sign in with Google" even if the browser is signed in — email + password only. This overrides any browser tooling that offers SSO as a convenience.
 
 ## Browser efficiency (strict)
 
