@@ -5,6 +5,8 @@ the whole pipeline: SEARCH scores against it, EVALUATE rejects against it, the c
 every claim from it, and a form field with no answer here becomes `NeedsUser`, never a guess.
 
 Keep it factual and complete. Detail that is missing here is missing from every application.
+If you use the CV generators, `application/cv_data.py` repeats these facts in print-ready wording:
+change a fact here first, then there, and never the other way round.
 
 ---
 

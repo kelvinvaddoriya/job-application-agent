@@ -4,7 +4,8 @@ All scripts stay flat in this folder: the prompts, the git hooks and any schedul
 by these paths. Each script's docstring has the full usage — read it once, then call the script.
 
 Stdlib-only except the document scripts, which need `python-docx`, `pypdf` and `Pillow`
-(`pip install -r ../requirements.txt`).
+(`pip install -r ../requirements.txt`). The two LaTeX generators also need `pdflatex`
+(MiKTeX or TeX Live) for `--compile`.
 
 ## Tracker and dashboard
 | Script | Used for |
@@ -25,16 +26,19 @@ Stdlib-only except the document scripts, which need `python-docx`, `pypdf` and `
 | Script | Used for |
 |---|---|
 | `mkpkg.py` | Creates an `Application_Packages/<Company_Role>/` folder: posting, CV, supporting docs, optional size cap. Map your filenames in its `DOCS` dict |
-| `make_cover_letter.py` | Fills the .docx cover-letter template with five tailored paragraphs and prints the body word count |
+| `make_cover_letter.py` | Fills the .docx cover-letter template with five tailored paragraphs and prints the body word count. Strips zero-width/invisible characters from the text on the way in (`tests/test_strip_marks.py`) |
 | `docx2pdfa.ps1` | Converts a .docx to PDF/A through Word COM — plain `SaveAs` produces ~7 KB PDFs that portals reject |
+| `make_tailored_cv.py` | Builds a per-job tailored CV in LaTeX from `application/cv_data.py` and compiles it. The exception, not the default: the designed CV is what normally ships |
+| `make_cover_letter_tex.py` | LaTeX cover letter in the same design as the tailored CV; `--wordcount` checks every letter against its language's range |
+| `make_combined_cv.py` | Builds a CV as .docx (EN/DE) from the section list in `cv_data.py` — the no-LaTeX route |
 
 ## APPLY (browser)
 | Script | Used for |
 |---|---|
 | `bh_helpers.py` | Form helpers to `exec()` inside the browser harness: `keep_rendering`, `form_snapshot`, `safe_click/fill/select`, uploads, shadow DOM, LinkedIn apply routes. Self-test: `browser-harness < tests/bh_selftest.py` |
-| `creds.py` | At a login wall: does Chrome hold a saved password for this portal, and how much that proves. Reads origins and usernames only — never the encrypted password |
+| `creds.py` | At a login wall: does Chrome hold a saved password for this portal, and how much that proves. Reads origins and usernames only — never the encrypted password. `accounts` writes the gitignored `application/accounts.md` (company / portal / email) |
 | `jstr.py` | Encodes non-ASCII text into a JS expression that survives the harness's encoding |
-| `xing_apply.py` | Drives a XING "Easy apply" wizard end to end |
+| `xing_apply.py` | Drives a XING "Easy apply" wizard end to end; `extra_file=` uploads a tailored CV next to the cover letter |
 
 ## Knowledge files
 | Script | Used for |

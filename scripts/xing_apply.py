@@ -51,7 +51,7 @@ def _step_text():
     return js(r"""document.body.innerText.replace(/\s+/g,' ').slice(0,260)""")
 
 
-def xing_apply(slug, phone, cover_letter=None, answers=None):
+def xing_apply(slug, phone, cover_letter=None, answers=None, extra_file=None):
     # `phone` is required on purpose: a default would be typed into a real application.
     import json
     answers = answers or {}
@@ -127,7 +127,8 @@ def xing_apply(slug, phone, cover_letter=None, answers=None):
     print("S4:", _step_text()[:70])
 
     # ---- step 4: documents
-    if cover_letter:
+    # The profile CV cannot be swapped here, so a tailored CV rides along as an extra document.
+    for f in [p for p in (cover_letter, extra_file) if p]:
         cdp("Page.setInterceptFileChooserDialog", enabled=True)
         drain_events()
         if _click("Upload file", pause=3):
@@ -136,7 +137,7 @@ def xing_apply(slug, phone, cover_letter=None, answers=None):
                 if "fileChooserOpened" in e.get("method", ""):
                     bid = e["params"]["backendNodeId"]
             if bid:
-                cdp("DOM.setFileInputFiles", files=[cover_letter], backendNodeId=bid)
+                cdp("DOM.setFileInputFiles", files=[f], backendNodeId=bid)
                 wait(8)
     docs = js(r"""document.body.innerText.replace(/\s+/g,' ').slice(0,900)""")
     print("DOCS:", docs[docs.find("Your CV"):][:220])

@@ -5,7 +5,7 @@ Generate a tailored, single-page cover letter PDF for one specific job. Facts co
 ## Content rules (mandatory)
 
 - **Language = posting language.** German posting → German letter, English → English. Never mix.
-- **Body 250–260 words, exactly five paragraphs.** No bullet points, no numbered lists, no headings inside the letter.
+- **Body 250–260 words in English, 210–235 in German (German words run longer and 250 spills onto page 2), exactly five paragraphs.** No bullet points, no numbered lists, no headings inside the letter.
   1. **Hook** — a thought-provoking question or statement about the field, connected to my motivation, why this company, why this role. Banned openers: "I am writing to apply…", "With great interest…", "I was excited to see…".
   2. **Main experience** — one significant experience: context, the challenge, what I built, what I learned. Show implementation *and* understanding; don't just list technologies.
   3. **Additional experience** — a second relevant project: impact, engineering decisions, relevance to this role; tools mentioned only inside the narrative.
@@ -28,6 +28,12 @@ and prints the body word count. It takes the letterhead from `JOBAGENT_LETTER_DE
 rather than writing a letter from the wrong language's template. Write the calling script with the Write tool and run it with `PYTHONUTF8=1` —
 umlauts typed into a bash heredoc are read as cp1252 and mangle.
 
+**If the CV for this job is a tailored LaTeX one** (`make_tailored_cv.py`), set the letter in the same
+design instead: add a `LETTERS` entry under the job's slug in `application/cv_data.py` and run
+`PYTHONUTF8=1 python scripts/make_cover_letter_tex.py --job <slug> --compile`. It prints the word
+count, `--wordcount` checks every letter against the language's range, and it writes the PDF
+directly, so the docx conversion below does not apply.
+
 File names (always inside `Application_Packages/<Company>_<Role>/`):
 - English: `Cover_Letter_<Name>.docx` → `.pdf`
 - German: `Anschreiben_<Name>.docx` → `.pdf`
@@ -45,7 +51,7 @@ StepStone (min 8 KB) rejects, while PDF/A embeds fonts (~200 KB). Never hand-rol
 ## QA before use
 
 - PDF is exactly one page and ≥ 100 KB (PDF/A check).
-- Body is 250–260 words in the correct language, five paragraphs.
+- Body is 250–260 words (English) or 210–235 (German) in the correct language, five paragraphs.
 - Company name, role title, and date are correct — no leftover text from the template job.
 - Every claim traces back to `application/resume.md`.
 - If the form has no cover-letter upload but has a motivation/message field, paste the letter body there instead and note in the tracker that no PDF was uploaded.

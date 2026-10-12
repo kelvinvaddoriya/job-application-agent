@@ -28,9 +28,13 @@ Steps 1–3 and 5 in one call: `python scripts/mkpkg.py <Company_Job_Title> <pos
 
 1. Create `Application_Packages/<Company>_<Job_Title>/` (underscores, no spaces).
 2. Save the full job description as `job_posting.txt` in it.
-3. Copy the selected CV from `application/CV/primary/` (or `secondary/`) into it — the designed CV
-   is the default. A German posting gets the German CV (`Lebenslauf_*.pdf`). If you tailor a CV
-   for a job, never leave both the designed and the tailored copy in one package folder.
+3. Copy the selected CV from `application/CV/primary/` (or `secondary/`) into it. **That is the
+   default.** Only when a job is worth a tailored CV, generate one instead with
+   `PYTHONUTF8=1 python scripts/make_tailored_cv.py --job <slug> --compile`. Add the job to `JOBS`
+   in `application/cv_data.py` first: one entry that selects and orders existing content (`--keys`
+   lists what there is to select) and never adds a fact that is not in `resume.md`. A German
+   posting gets `lang="de"`, which emits `Lebenslauf_*.pdf`.
+   Never leave both a designed and a generated CV in one package folder.
    **The CV never names the employer** — not in the headline, profile, file name, or by
    naming one of their internal projects. Tailoring means selecting and ordering the user's
    own work to match the posting and describing the domain in public terms (a standard, a

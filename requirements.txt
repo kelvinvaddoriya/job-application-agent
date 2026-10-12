@@ -1,4 +1,5 @@
-# Only needed by the document scripts (mkpkg.py, make_cover_letter.py).
+# Only needed by the document scripts (mkpkg.py, make_cover_letter.py, make_combined_cv.py).
+# The LaTeX generators (make_tailored_cv.py, make_cover_letter_tex.py) are stdlib + a pdflatex install.
 # The tracker, discovery and browser helpers are stdlib-only.
 python-docx
 pypdf

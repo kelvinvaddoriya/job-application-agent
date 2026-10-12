@@ -24,6 +24,9 @@ def main():
     h2, h3 = f"## {a.portal}", f"### {a.portal} — {a.company}"
     bullet = f"- ({a.date}) {a.text.strip()}"
     h2s = [(i, l) for i, l in enumerate(L) if l.startswith("## ")]
+    # A `---` rule or a `# ` title ends a section too: one closes the General block, and a
+    # lesson filed past it would sit under "# Portal sections" instead of under General.
+    stops = [i for i, l in enumerate(L) if re.match(r"^(#{1,2} |---$)", l)]
     if h2 not in L:
         names = [(i, l[3:]) for i, l in h2s if not l[3:].startswith(("General", "Archive"))]
         pos = next((i for i, n in names if n.lower() > a.portal.lower()), None)
@@ -32,10 +35,10 @@ def main():
         L[pos:pos] = [h2, "", h3, "", bullet, ""]
     else:
         i2 = L.index(h2)
-        end2 = next((i for i, l in h2s if i > i2), len(L))
+        end2 = next((i for i in stops if i > i2), len(L))
         if h3 in L[i2:end2]:
             i3 = L.index(h3, i2)
-            end3 = next((i for i in range(i3 + 1, len(L)) if re.match(r"^#{2,3} ", L[i])), len(L))
+            end3 = next((i for i in range(i3 + 1, len(L)) if re.match(r"^(#{1,3} |---$)", L[i])), len(L))
             while end3 > i3 and not L[end3 - 1].strip():
                 end3 -= 1
             L[end3:end3] = ["", bullet]

@@ -312,9 +312,19 @@ been higher yield per token than the fresh search that opened the same session.
 
 - (2026-09-18) document.hidden / stuck-disabled submit buttons now have a one-call fix: keep_rendering() in bh_helpers (CDP Emulation.setFocusEmulationEnabled, ported from browser-use/jev-ultrafast). It makes a background tab report visible+focused and keeps rAF running, persists across browser-harness calls while the daemon lives, and replaces the minimize/restore window trick in section 6. Pair it with form_snapshot() (one call: every control incl. shadow DOM, required flags, ids, errors) and safe_click/safe_fill/safe_select (hit-tested, refuse to click through overlays, read-back verified). Self-test: browser-harness < tests/bh_selftest.py (63 checks).
 
+- (2026-09-25) NEVER verify a German-language upload by grepping the page text for 'Lebenslauf' or 'Anschreiben' - those are the FORM'S OWN FIELD LABELS and match whether or not a file attached. An Erbe/Persis submit died with chrome-error ERR_FILE_NOT_FOUND because the package folder had never been built (its XING ld+json fetch had 410'd earlier in the batch), the upload silently set a nonexistent path, and the 'Lebenslauf in page text' check passed on the label. Verify with the FULL filename ('Lebenslauf_<Name>'), and on widgets that never render a filename (Persis) fall back to input.files[0].name - which is legitimate here because Persis is not an AJAX input that clears itself. Also: os.path.exists the file in the same heredoc before calling upload().
+
+- (2026-09-25) End-of-batch tab cleanup silently closed a parked handoff that WAS in the keep-list: the KINEXON Greenhouse tab matched the keep substring 'greenhouse.io/embed/job_app?for=kinexon' yet was gone afterwards, and the loop's own 'kept' printout never listed it while the remaining-tab count (5) disagreed with the kept count (3). Never trust the keep filter - after closing tabs, re-run list_tabs() and assert each parked handoff URL is still present, because a closed park means the next session must refill the whole form. Cheap mitigation that worked: every parked form here was reproducible in one pass from the tracker note, so write the full field list into the note at park time rather than relying on the tab surviving.
+
 ### General — Search and sources
 
 - (2026-09-14) **Two LinkedIn guest-API sweeps (18 + 18 keywords, r259200 then r604800) + full-posting language screen in Python** produced 10 submits in one batch after two earlier batches the same day; routes resolved from the logged-in page's Apply href. Company-cap/dedupe in the filter must index `tracker.load()` rows as 0 Date, 1 Company, 2 Position, 4 Reference Code.
+
+- (2026-09-23) XING thesis pool is deep but mostly already-worked: of 12 fresh Abschlussarbeit/Masterarbeit cards, 4 were language-gated (sehr gute Deutsch: Syneco, Pan Dacom, Senacor, OPTIMA), 3 were exact duplicates already Submitted under the same xing ref (ABB 157050784, Funke 156659662, UVC 157483959 via arbeitnow), 1 was a role the user was already REJECTED for, and 3 DLR theses died on the company cap. Extraction note: while logged OUT, a XING job page renders its 'Similar jobs' block into innerText ahead of the posting, so scraping the first lines yields the WRONG company and title (cost several calls). Read script[type=application/ld+json] instead - it gives hiringOrganization.name, title, datePosted and the full description in one js() call, which is also the cheapest language screen.
+
+- (2026-09-24) The li_jobs.py language screen flags any 'sehr gute Deutsch' hit as BAD, but the surrounding conjunction decides: Siemens' Masterarbeit ML Roaming Assistant reads 'Sehr gute Deutsch- ODER Englischkenntnisse', which strong English satisfies, while Mercedes' 'Sichere Deutsch- UND Englischkenntnisse' is a real gate. Always read the screen's context line, never the BAD/ok verdict alone - an OR clause is the cheapest source of qualified German-language postings there is. Thesis pools on 2026-09-24: LinkedIn (2 sweeps, 27 thesis keywords, 2000+ cards) yielded 8 thesis cards of which every one was capped, already applied, or language-gated; StepStone's thesis keyword searches returned 4 hits (ams OSRAM, Bitnamic, intension, Eisenmann) all dead on language, 'Schon beworben' or Bachelor-only; arbeitnow returned zero. XING was the only live thesis source (13 fresh ids >= 157500000 from 5 keyword sweeps, 5 survived dedupe) - read script[type=application/ld+json] per posting for company/title/datePosted/description in one js() call.
+
+- (2026-09-24) Second search round the same day DID pay, against the rule of thumb - 22 verified finds. What worked: a 14-day LinkedIn guest sweep with 12 thesis keywords (424 cards, 12 new) plus a 10-day sweep with 14 broad Werkstudent/Praktikum keywords (224 new cards) - the BROAD sweep carried the batch, the thesis sweep gave 1 usable role. XING: 8 thesis keywords x 2 pages with scroll-extract = 199 slugs, 38 fresh (id >= 157.5M), 30 after tracker dedupe, 18 opened, 10 language-gated, 2 usable. Accumulate the slugs in localStorage.__JOBS, not a window variable, and avoid JS regex literals - test the trailing id with String(Number(tail))===tail. arbeitnow returned 250 cards and ZERO thesis roles. StepStone 6 keywords x 2 pages = 384 cards, 43 thesis+tech, 4 survived language, 2 of those were exact duplicates of already-Submitted rows - 1 usable. ats_probe boards across 20 German AI/tech company slugs found 4 usable student roles (Langdock/Ashby, KINEXON+NavVis/Greenhouse) for almost no tokens - worth a standing pass. THE REAL CONSTRAINT ON THESIS ROLES IS THE COMPANY CAP, NOT THE LANGUAGE GATE: DLR, Fraunhofer (13 open), BMW, AGCO, Mercedes, HELLA and Freudenberg all had live, language-clean thesis postings that were capped out.
 
 ## General — detail
 
@@ -453,6 +463,14 @@ Dated cross-portal lessons behind the rules above, by topic, newest last. Grep o
   text, and both employer pages demand German (C1 / "sehr gute Deutschkenntnisse"). Screen on the employer's page.
   TARGOBANK - PeopleSoft CV attachment never links (howtologin section added). BNP Paribas - Avature
   `manualRegisterMethodsForm` = account registration, a hard stop.
+
+- (2026-09-24) A LinkedIn card's employer name is not authoritative - same class as the StepStone slug lesson. A row queued as 'ProTek Systems - Werkstudent Digitalization and AI' (softgarden 67430862) opened as POLY-CLIP SYSTEM GmbH & Co. KG, a company the user had already applied to for the identical role eight days earlier under sibling id 67430917. tracker.py check on the queued name returned nothing; the duplicate only surfaced after reading the employer off the landing page and re-running check on the REAL name. Resolve the employer from the apply target's own page before the dedupe check, not from the aggregator card.
+
+- (2026-09-25) Second aggregator-byline duplicate in two days, this time via a gohiring redirect: a LinkedIn card bylined 'collana GmbH' (linkedin_4469963190) resolved through t.gohiring.com to macits.jobs.personio.com/job/2677670 = MAC IT-Solutions GmbH, already Submitted 2026-09-01 for the identical position under THE SAME Personio job id. tracker.py check 'collana' returned 0 prior rows; check 'MAC IT' returned the row instantly. The generalisation: when the apply route is a redirector (gohiring, aplitrak, broadbean), the Personio/ATS tenant slug in the FINAL url is the employer key, and its numeric job id is a stronger dedupe key than the aggregator ref - grep the Reference Code column for that id before filling anything.
+
+- (2026-09-25) A broken employer-side link can send BOTH LinkedIn and the employer's own board to the wrong job. MOBIS Parts Europe's board renders the card 'Computer Vision Intern - Machine Learning Operations (m/f/d)' with an overlaying <a> whose href is the unrelated 'SAP-Specialist-...-709210052' job, and LinkedIn's Apply href had scraped the same broken value - so li_apply_routes returned a completely different role and the board appeared not to list the intern job at all. Recovery that worked: fetch /sitemap.xml and match the slug, then read script ld+json on that page - its 'title' was 'Computer Vision Engineer Intern (m/f/d)' while the slug and H1 said only 'Computer Vision Engineer'. Rule: when an apply href resolves to a job whose title does not match the card, do not conclude the posting is dead - check the employer's sitemap and trust ld+json over the slug, the H1 and the card.
+
+- (2026-09-26) An active interview can be invisible to tracker.py check, because interview invitations arrive by phone or inside the portal and nothing writes them to the tracker until the user says so. One employer read 'OK / 1 open row (Submitted three days earlier)' and a second application was packaged and filled before the user said an interview was already scheduled. Rule: when check shows an OPEN employer-facing row at the same company from the last ~2 weeks, ASK the user whether anything has moved on it before packaging a second role there - a fresh Submitted row is exactly the age at which an interview invitation lands. And record the interview the same turn they mention it (Status=In Progress + Outcome), which is what makes the company print CAP_REACHED for every later batch.
 
 ### General — Search and sources
 
@@ -1236,7 +1254,7 @@ Sie einen Zwischenbescheid per E-Mail" on its success page and then sends nothin
 
 - (2026-09-07) **A German posting gets a German CV.** `scripts/make_tailored_cv.py` carries a `lang` per job
   and emits `Lebenslauf_*.pdf` for `de`, `CV_*.pdf` for `en`; `--lang` overrides. German wording
-  is copied from `scripts/make_combined_cv.py` CONTENT['de'] so nothing is invented — only
+  is copied from the docx builder's German section list (`DOCX_CV['de']` in `application/cv_data.py`) so nothing is invented — only
   LegalAddress needed new German, and that translates facts already in resume.md.
 
 - (2026-09-07) **No photo**, by decision. The designed PDFs keep theirs; the generated ones have none.
@@ -1267,10 +1285,13 @@ Sie einen Zwischenbescheid per E-Mail" on its success page and then sends nothin
 - (2026-09-12) **`make_cover_letter.build()` stamps a STALE DATE unless you pass one.** Its signature is
   `date="<your city>, 30. August 2026"` - a hardcoded default, so every letter built without an explicit
   `date=` argument carries 30 August. Always pass `date="<your city>, <today>"`. Worth auditing older packages.
+  **Fixed since:** `build()` now stamps today's date when `date` is omitted; pass `city=` for the place prefix.
 
 - (2026-09-12) **The 250-260 word rule and the one-page rule conflict on the German template.** 255 words spilled the
   signature onto page 2; what actually fixed it was cutting the recipient block from three lines to two
   (243 words then fit). Check `len(PdfReader(pdf).pages)` every time and trim the ADDRESS before the prose.
+
+- (2026-09-26) German cover letters cannot hit the 250-260 word body target and stay on one page. At 250-266 German words every one of six Anschreiben spilled onto a second PDF page (German compounds are far longer than English words); trimmed to 212-234 they all fit. Rule: English letters aim at 250-260, German letters at 210-235, and the one-page PDF check is the authority - always run pypdf len(PdfReader(f).pages)==1 on every letter before uploading, because make_cover_letter.py only prints the word count.
 
 ---
 
@@ -1286,6 +1307,12 @@ your own runs accumulate; `addlesson.py` creates them.
 *Aggregator traps (jobportale-siegen.de / berufsstart, itsax.de, karriere.fhdw.de)*
 
 2026-07-23 - XING often links to a regional/university aggregator rather than the employer ATS. Three behaviours seen in one batch: **itsax.de** hosts its own inline application form (first_name/last_name/email/telephone/livingInGermany radios/comment/file-upload) and forwards to the employer - usable. **karriere.fhdw.de** shows the employer's ad but its 'Jetzt bewerben' points at FHDW's own *study* application - the real channel is the employer email in the ad body. **jobportale-siegen.de** (berufsstart network) has no apply control at all and its `anzeigenverlinkung.php` redirect renders blank - dead end, only the printed phone/postal contact remains. Always follow the aggregator to an actual apply control during EVALUATE.
+
+## amazon.jobs
+
+### amazon.jobs — General
+
+- (2026-09-24) First amazon.jobs submit (AWS SDE Internship 3130528). Route: job page -> 'Bewerben Sie sich noch heute' = /applicant/jobs/<id>/apply -> passport.amazon.jobs email-first login (enter email, Weiter, THEN coordinate-click the password field - Chrome autofill fires there). If the saved credential is not your `JOBAGENT_EMAIL`, confirmations land in a mailbox the Gmail tool cannot read: the portal's /summary?result=success page is the proof. The form is a 9-tab wizard that PREFILLS from the last Amazon application and the prefill is stale - the preferred start date and the CV were both months old and the sponsorship answer was wrong, so re-check every prefilled tab against resume.md. Every date input (placeholder JJJJ-MM or JJJJ-MM-TT) silently reverts to empty after cdp Input.insertText and re-blocks Fortfahren one section later; only the native value-setter plus input+change+blur commits them. Dropdowns are select2: click the control, read li.select2-results__option, coordinate-click the option; multi-selects need the search field re-clicked between every pick and show chips as li.select2-selection__choice. Replace the CV via input#document-replace-input.
 
 ## arbeitnow
 
@@ -1401,7 +1428,8 @@ your own runs accumulate; `addlesson.py` creates them.
 
 - Success text varies: "Your application was successfully submitted" (default) vs a custom
   "Thank you for your application..." (Avelios) - check that the Submit button is gone as a fallback.
-  Confirmation mail from `no-reply@ashbyhq.com` arrives within ~1 min.
+  Confirmation mail from `no-reply@ashbyhq.com` arrives within ~1 min on tenants that send one - not all
+  do (see 2026-09-25 below), so the on-page text is the proof.
 
 - (2026-09-11) **`document.hidden` also strikes with ONE tab open.** On Ashby every radio/Yes-button/consent click
   was silently ignored until `Target.activateTarget` + window minimized->normal; text fields filled via
@@ -1414,6 +1442,12 @@ your own runs accumulate; `addlesson.py` creates them.
 - (2026-09-16) (2026-09-16) The ApiJobPosting form JSON is also a LANGUAGE-GATE DETECTOR, not just a fill config. Langdock's LinkedIn text said only 'communicate clearly and professionally in both German and English' (no level named = passes the usual screen), while the form carried a REQUIRED Boolean 'I have C1+ or equivalent in German language'. One GraphQL POST caught it before packaging or a browser tab. Read the schema on every Ashby job and grep the field titles for C1/C2/Deutsch/German before investing.
 
 - (2026-09-19) 2026-09-19 (amber): the whole form went through with bh_helpers alone - safe_fill (hit-tested click + selectAll + insertText) registered the system name/email/phone, the type=number salary and the MM/DD/YYYY date; setFileInputFiles on _systemfield_resume worked; Yes/No buttons via safe_click (verify aria-pressed). The location typeahead: safe_fill the text, then safe_click the [role=option].
+
+- (2026-09-23) _systemfield_name can fail submit with "Missing entry for required field: Name" even after cdp Input.insertText leaves the correct .value - React never committed it. Fix that worked on rivianvw.tech: focus + setSelectionRange, a real Delete keyDown/keyUp to clear, then per-character Input.dispatchKeyEvent type=char, then blur. Same submit then went through unchanged. Treat insertText as necessary but not always sufficient on system fields; always resubmit once after a Name/Email correction rather than re-filling the whole form.
+
+- (2026-09-25) Two Ashby gotchas worth the note. (1) safe_click on a Submit tagged in an EARLIER browser-harness call returns {'ok':False,'reason':'stale'} - Ashby re-renders the button after the last answer commits, so tag AND click it in the same call, or re-tag first. (2) Big tenants (Snowflake) drop the _systemfield_location id entirely: the field is input[role=combobox] with placeholder 'Start typing...' and no id, so '#_systemfield_location' throws. Find it by placeholder/role, set_text the city, then click the [role=option]; it commits as '<City>, <State>, <Country>'. Boolean YES/NO buttons are easiest handled by tagging every YES/NO button in document order (2 per group, groups follow the API field order) and reading back aria-pressed.
+
+- (2026-09-25) Ashby confirmation mail is PER TENANT, not guaranteed: Snowflake's 'Thank you for applying' from no-reply@ashbyhq.com landed within a minute, while Langdock and Kyrall sent nothing in the same-night sweep. So the 2026-09-11 note that a no-reply@ashbyhq.com mail 'arrives within ~1 min' cannot be used as the submit test - treat the on-page 'Your application was successfully submitted.' plus the Submit button disappearing as the proof, and do not reopen a row just because no mail came.
 
 ## BambooHR
 
@@ -1436,6 +1470,8 @@ your own runs accumulate; `addlesson.py` creates them.
 - **Submit reveals a reCAPTCHA** ("Almost there! Please confirm you're not a robot") → bot detection, hand off to the user with the tab left open.
 
 - 2026-08-23 — **Two more bot-detection walls: BambooHR and CHECK24's career.check24.de.** BambooHR (azolver) fills fine — including its `nickname_*` honeypot, which must stay empty — then reveals a reCAPTCHA at submit. career.check24.de needs the applicant to accept a **Vermittlungsvertrag** (a placement contract), which is beyond a data-processing consent and so is the user's call, not the agent's. Both are "fill everything, leave the tab open, hand off the same day" cases like Greenhouse.
+
+- (2026-09-24) icct.bamboohr.com/careers/401 shows the pattern to check BEFORE investing: three separate REQUIRED file slots (Cover Letter*, Resume*, and a Python code sample*) plus a required free-text field asking for two references with contact details. Read the file-slot headings early - they are not on the input, walk up the parents until the first line is not "Choose File". Radios have no id and no label, only name=customQuestionAnswer and value=Yes/No, and repeat per question, so address them by index order and set them with a CDP coordinate click (label-based clicking finds nothing). A code sample or referee list is a candidate fact, not an agent fact - prefill everything else and hand off rather than skipping the row.
 
 ## Breezy HR
 
@@ -1551,6 +1587,8 @@ your own runs accumulate; `addlesson.py` creates them.
 
 **Used by:** HELLA (hella.csod.com), other large corporates.
 
+- (2026-09-22) HELLA req 18840 (2026-09-22): Earliest-start text field ignored native setter AND fill_input (value shown, still 'required' on Next); what worked: focus + setSelectionRange + Backspace, then per-char Input.dispatchKeyEvent keyDown/keyUp with text, then a Tab key event -> aria-invalid cleared. Transcript of records is REQUIRED on step 1 (attachment_upload_0_*). The 'existing account' modal re-opens on every Next until the step validates - read the errors, not the modal.
+
 ## d.vinci
 
 ### d.vinci — General
@@ -1606,6 +1644,12 @@ Employer pages embed it as an **iframe** — read `iframe.src` off the company c
 - Submit = coordinate-click "Bewerbung absenden" → `/thankyou/<uuid>` "Vielen Dank für Ihre Bewerbung!"; employer sends its own Empfangsbestätigung.
 
 - **Careful with umlauts in JS selectors**: matching `x.placeholder==='auswählen'` throws a SyntaxError through the heredoc — match by index or ASCII substring instead.
+
+## Eightfold
+
+### Eightfold — General
+
+- (2026-09-23) THE fix for Eightfold comboboxes (input-N, role=combobox, aria-controls=list-N): click_at_xy and JS .click() both no-op on the option, and ArrowDown+Enter only sometimes commits. What works every time is a RAW CDP mouse sequence with an explicit mouseMoved first: Input.dispatchMouseEvent mouseMoved -> mousePressed(clickCount=1,buttons=1) -> mouseReleased, on the field to open it and again on the button[role=option]. After that the input's .value really does read back the chosen label, so verify by read-back. Also: these fields are NOT readOnly on every tenant - a Space keypress typed two spaces into one instead of activating the highlighted option. Selecting an option can REVEAL a dependent required question that the first submit then rejects (Telekom: 'What type of internship is it?' = Other revealed 'What does it refer to?'), so budget one extra submit round. Verified on jobs.infineon.com and growthhub.telekom.com.
 
 ## Empfehlungsbund (EBMS)
 
@@ -1801,6 +1845,8 @@ URL with **`-f<NNN>.html`** ("Jetzt bewerben" just links to it).
 
 - (2026-09-19) The resume upload triggers an async CV parse that WIPES name/email/phone typed in the next few seconds (AutoScout24, Agile Robots 2026-09-19: fields read back empty while later fields stuck). Upload files first, wait ~10 s, then fill - or just re-run safe_fill on the fields whose read-back failed. Also: with invisible reCAPTCHA Enterprise the first Submit click can be swallowed silently; one retry went through.
 
+- (2026-09-25) react-select on job-boards.eu.greenhouse.io does NOT commit from a coordinate click on the option - the click reports ok and the control still reads 'Select...'. What commits every time: focus the hidden input by its question id, clear value, ArrowDown to open, walk the highlight with ArrowDown while comparing aria-activedescendant against the target react-select-<qid>-option-N id, then Enter. Verify by the control container's innerText, never by input.value. Also: do NOT read options from [role=option] - intl-tel-input's phone country list (iti-0__item-*) matches it and floods 200+ countries; scope to [id^=react-select-<qid>-option]. NavVis submitted with NO 8-char email gate and redirects to <joburl>/confirmation - so the emailed-code handoff is per-tenant, not Greenhouse-wide; poll location.href for /confirmation as well as the success text.
+
 ## HiBob
 
 ### HiBob — General
@@ -1987,6 +2033,8 @@ Guest apply form via StepStone phantom -> Unternehmenswebsite. Field names candi
 
 - (2026-09-14) **JOIN's review page pre-ticks "use this CV by default"** - uploading a variant CV silently changes the user's
   JOIN default. Untick it unless the new CV should become the default.
+
+- (2026-09-24) Two things on the JOIN wizard. (1) Step 1 can PRE-ATTACH the CV from the JOIN profile (heading "Bestaetige deinen Lebenslauf") with NO file input on the page - click "Datei entfernen" first, which then reveals the file inputs, or the profile CV gets sent instead of the tailored one. Verify by reading the rendered preview for the tailored headline. (2) The start-date calendar is an Ark/Zag widget (td with data-scope/data-part/data-value): scrollIntoView CHANGES the cell rect, so a coordinate captured before the scroll misses silently and leaves aria-selected=false. Re-read the rect AFTER scrolling, then dispatch mousePressed+mouseReleased on the cells inner div and verify aria-selected=true plus the data-value date.
 
 ## Kenjo
 
@@ -2213,6 +2261,16 @@ Guest apply form via StepStone phantom -> Unternehmenswebsite. Field names candi
 - **Submit sends a 6-digit email verification code** (`career@<company>.com`, valid 10 min). The pin inputs are `#pin-code-1..6` and auto-advance — typing all 6 into the first field only lands one digit; **click each field and type one digit at a time**. Then VERIFIZIEREN.
 
 - Success: redirect to `/my-profile` showing "Vielen Dank für Ihre Bewerbung" + the role under AKTIVE BEWERBUNGEN with "Beworben am <date>" and status "Wird geprüft".
+
+## Own-site forms
+
+### Own-site forms — General
+
+- (2026-09-24) jobware.net renders no job description at all - both /Studentenjob/<id> and the canonical /job/<slug> return navigation only, so a language and fit screen is impossible there. Do not write the row off: the 'Jetzt bewerben' anchor is a /apply/<token> redirector that lands on the employer's own posting (Salzgitter Flachstahl, 2026-09-24), which carried the full Aufgaben/Profil block and a live ONLINE BEWERBEN control. One goto_url on that anchor is the whole cost.
+
+- (2026-09-25) bewerbermanagement.net (Max Planck institutes and other German public employers) - clean guest form, no login, ids are sequential bjpfg-input-field-<N>. THE WHOLE FORM IS disabled:true until the data-privacy checkbox (bjpfg-input-field-0) is ticked, and set_text returns '' on every field until then with no error - tick the consent FIRST, then fill. File inputs do not exist in the DOM at all: the 'Upload CV' and 'Upload files' buttons each inject one on click (mpf0 = CV-for-autofill which OVERWRITES typed fields, mpf1 = Attachments - use mpf1). The attachment input clears itself after upload, so verify by the filename in the page text. Two-step finish: 'Verify & submit' renders a Summary page, then 'Submit application'. Success: 'Your application was successfully submitted.'
+
+- (2026-09-27) Avature (jobs.siemens-energy.com / Siemens Gamesa) is the first uploader in this project where DOM.setFileInputFiles is NOT enough. input.files reaches 1, input.value shows C:\fakepath\<name>, and the widget even RENDERS the filename under 'Upload your CV' - yet Avature's own validator keeps 'This field is required' and Continue never advances. Tried: plain upload(), upload()+dispatch input/change, Page.setInterceptFileChooserDialog(enabled=true), and clicking the 'Upload your CV' anchor after setting files. None cleared it, so budget a handoff for Avature rather than a 4th attempt. Separate trap on the same site: the page has TWO 'Login' controls - the top-nav <a> at y=40 reloads /jobs/Login and DROPS the folderId (losing the job context); the real one is button[type=submit] inside the form.
 
 ## P&I LOGA
 
@@ -2985,6 +3043,8 @@ and a dead GIZEH req.
   "has been sent" mail and the employer's own softgarden confirmation arrived within the minute. `unknown`
   is a submit, not a failure.
 
+- (2026-09-25) A StepStone apply button reading 'Ich bin interessiert' (data-testid=harmonised-apply-button) is NOT an application - clicking it lands on /job/<uuid>/application/confirmation/success whose text is 'Hat mit deiner Bewerbung alles geklappt? Falls nicht, kannst du deine Bewerbung jetzt auf der Unternehmenswebsite starten.' That URL contains both 'confirmation' and 'success' and will be logged as Submitted by anyone matching on the URL. It is an interest ping plus a router: the real route is behind the 'Unternehmenswebsite' BUTTON (no href - it must be clicked, and it opens a NEW TAB). Liebherr-Werk Ehingen 14500547 routed this way to SuccessFactors career5 ?company=LiMySLive. Always read the page TEXT, and treat 'Ich bin interessiert' as an external-redirect posting during EVALUATE, not an inline smart-apply.
+
 ## SuccessFactors
 
 ### SuccessFactors — General
@@ -3141,6 +3201,8 @@ on `/apply/`, and with `?src=`. Two different diagnoses, one cheap test.
 
 - (2026-09-16) (2026-09-16) On Provinzial (company=provinzial, career5) the Usercentrics consent modal renders INSIDE A SHADOW ROOT (<usercentrics-cmp-ui>), so it is invisible to querySelectorAll('[role=dialog],.modal') and to a fixed-position div scan - the page looks clean while every click on the login form is swallowed. Walk shadowRoots to find its buttons ('Nur erforderliche verwenden' / 'Alle akzeptieren'); their getBoundingClientRect values are already in page coordinates and coordinate-click normally. Shared career5 credential: rejected here (tally now clearly a coin flip).
 
+- (2026-09-25) On SuccessFactors RMK application pages the question fields can be COLLAPSED, and a collapsed section's combobox inputs have getBoundingClientRect() of 0x0 at top 0 - so every click, pick_option and Input.insertText silently no-ops and the field keeps reading ''. There is no error and nothing looks wrong. Click 'Expand all sections' FIRST; the fields then get real geometry (210x36) and commit normally. Second trap: each combobox appends its option list to the DOM and LEAVES IT THERE, so reading '[role=option]' after touching two fields returns a merged list and pick_option reports {'missing': ...} with another field's options - press Escape and re-tag the options per field, or match against the list owned by the field's aria-owns id. The Apply control is a SPAN (id <n>:_submitBtn), not a button or input, so a /Submit|Apply/ scan over button/input finds nothing.
+
 ## Taleo
 
 ### Taleo — General
@@ -3180,6 +3242,8 @@ on `/apply/`, and with `?src=`. Two different diagnoses, one cheap test.
 - Submit via `form.requestSubmit()`; success = redirect to `/applications/<uuid>/thanks/...` ("Vielen Dank für deine Bewerbung").
 
 - Custom multi-pick questions ("Option auswählen") are not native selects; optional ones can be skipped.
+
+- (2026-09-24) Teamtailor can gate submit behind EMAIL VERIFICATION: requestSubmit redirects to /applications/email_verification_... and the application is NOT filed until the link in the mail (from no-reply@<tenant>.teamtailor-mail.com, subject "Complete the application for <role>") is opened. Pull the URL from Gmail and goto_url it; the page then shows "We have received your application". Never log Submitted off the redirect alone. Also on the Huawei tenant: a 1x1 unnamed required text input inside the custom "How did you hear" widget shows up in an empty-required scan - it is a widget artifact, the real answer is the radio group candidate[answers_attributes][0], and it does not block submit.
 
 ## umantis
 
@@ -3291,6 +3355,14 @@ on `/apply/`, and with `?src=`. Two different diagnoses, one cheap test.
   `jobTitle`, `companyName` and the month/year boxes all stayed empty under insertText but filled
   reliably with a per-character `Input.dispatchKeyEvent` (keyDown with `text`, then keyUp, ~40 ms
   apart). Backspace loops from the end of the field are the way to clear them.
+
+- (2026-09-24) apobank.wd103 (Manuell bewerben guest path, no password) has a required prompt multiselect Wie haben Sie von uns erfahren? that refuses every automation route: element.click(), CDP mousePressed/Released on the inner [data-automation-id=promptLeafNode], type-to-filter, ArrowDown+Enter and Space all leave aria-label "<x> not checked" and the field on "0 items selected", while Input.insertText fills the plain text fields on the same page normally - so this is NOT a wedged Input pipeline and NOT document.hidden (both verified false/focused, keep_rendering on). Options carry aria-label "<name> not checked"/"checked" and data-automation-selected, which is the only reliable readback. Budget one or two tries on a Workday prompt multiselect, then prefill the rest and hand off.
+
+- (2026-09-24) SOLVED the prompt-multiselect that blocked apobank.wd103 earlier the same day: Workday prompt options ignore element.click() and CDP mouse events, but they DO respond to a full SYNTHETIC event sequence dispatched in JS on the options inner [data-automation-id=promptLeafNode] - pointerover, pointerenter, pointerdown, mousedown, pointerup, mouseup, click, each with bubbles+cancelable+composed and view:window. Two further traps: (a) top-level entries can be CATEGORIES, not values - clicking Stellenboerse replaced the list with its children (Indeed, Stepstone, StudyDrive...), and the list is VIRTUALIZED so scroll the [role=listbox] to see them all; readback is the options aria-label, which flips from "<x> not checked" to "<x>, press delete to clear value", and the field text goes to "1 item selected, <x>". (b) A plain text questionnaire field filled with Input.insertText read back correct but arrived as "Keine Antwort" on the Pruefen page - only a CDP mouse click into the field followed by per-character dispatchKeyEvent type=char committed it. ALWAYS diff the Pruefen page against what you filled before Uebermitteln.
+
+- (2026-09-24) jj.wd5 questionnaire specifics worth reusing: the base-salary question is a NUMERIC-ONLY text field that silently strips letters and concatenates the remaining digits (an answer giving an annual and an hourly figure arrives as the two numbers run together) - triple-click, Delete, assert empty, then type digits only. The How Did You Hear prompt nests LinkedIn under Job Board, not Social Network (which only holds Facebook/Instagram). The Degree prompt has 47 entries dominated by medical degrees; pick the generic entry (e.g. Masters Degree or Equivalent), and option aria-labels go EMPTY once the virtualized listbox is scrolled far, so collect option text with innerText and reset scrollTop to 0 before searching. School and Field of Study accept free text: type the value then press Enter and the field commits as 1 item selected.
+
+- (2026-09-25) Workday 'Application Questions' pages CASCADE: answering one question injects a new required field below it, so the page cannot be completed in one pass - a Yes on 'Do you currently hold a Visa or Work Permit' adds 'expiration date of your Visa or Work Permit', a Yes on 'final year of your degree' adds 'graduation date', and a Yes on 'previously completed an internship' adds 'previously completed an internship AT <employer>' (Stryker). Save and Continue, read the Errors Found block, answer what it names, repeat. Second trap: NEVER location.reload() mid-flow - it dropped the signed-in session back to 'step 1 of 7 Create Account/Sign In' AND blanked every answer on the questions pages (My Information and the CV upload survived). If Workday shows 'Something went wrong, please refresh', expect to re-enter the question pages after signing in again. Third: match dropdowns by their question label, not by a tagged id - reusing one id leaves the OLD element in the document and getElementById returns the first match, so readbacks report the wrong field's value and answers look committed when they are not.
 
 ## XING
 
@@ -3647,3 +3719,9 @@ link in the page HTML (grep the employer domain).
 - (2026-09-14) **XING via curl is the cheapest discovery path yet**: slugs collected in the browser, then JSON-LD + `applyUrl`
   fetched offline for ~320 jobs - it resolved employer routes (Personio, Rexx, d.vinci, SF RMK, studyflix->Greenhouse)
   that LinkedIn never exposes. Four of today's ten came straight from applyUrl.
+
+- (2026-09-27) XING quick-apply cannot carry tailored documents: its 'Add new document' opens a NATIVE file picker and there is no input[type=file] anywhere in the DOM (checked shadow roots too), so the only attachment is the stored XING profile CV. When the posting names a contact address - Marquardt's did, and XING itself said 'We'll send your application to <address>' - the direct email handoff delivers the same recipient WITH the tailored Lebenslauf + Anschreiben. Prefer email over quick-apply whenever tailored docs matter and the recipient is known.
+
+- (2026-09-27) The XING slug's job id is the LAST '-' segment (/jobs/<city>-<title>-<id>), not the first. A sweep that parsed the FIRST segment read the city as the id and returned ZERO slugs across 8 keywords x 2 pages - which reads exactly like 'the XING thesis pool is dead' and would have written the only live thesis source off for a second time. Fixing the parse turned 0 slugs into 213. Also: XING now redirects /jobs/search?keywords=X to /jobs/search/ki?... but the result cards still render, so the redirect is not the failure. Rule from section 3 confirmed again - when a source returns zero, suspect the extractor before the pool.
+
+- (2026-09-27) A live XING 'Visit employer website' button does NOT prove the employer req is alive. Roche's 'Internship/Thesis in Global Engineering Automation' (157543731) still rendered a working apply button; it hopped via studyflix.de/jobs/angebote/497685 to roche.wd3.myworkdayjobs.com/.../202608-121014-2 which returned 'The page you are looking for doesn't exist', and a CXS API search of the Roche board ('Thesis' = 13 hits, 'Internship Engineering' = 12) had no twin. Verify the route through to the EMPLOYER page during EVALUATE, not just that XING renders a button - and use the window.open stub on apply-button INDEX 1, because index 0 belongs to a 'similar jobs' card and clicking it navigated to a completely different posting.

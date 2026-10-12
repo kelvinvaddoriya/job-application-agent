@@ -139,6 +139,10 @@ materially different diagnosis. Update creds.py's HOW text to say password field
 - (2026-09-14) **Shared career5 credential: 1 of 1 today** (Everllence `volkswagenT45` logged in). Per-tenant Workday
   (ArianeGroup, STRONG verdict) rejected its password - stopped after one attempt to avoid a lockout.
 
+### General — Sign-in pages
+
+- (2026-09-23) On a sign-in page, TRY THE SIGN-IN BUTTON BEFORE writing NeedsUser. Chrome autofills a saved credential into the form, so the email and password fields are often already populated and the only missing action is the click - the user watched this happen on AGCO. Procedure at every login wall: read the email/password field VALUES (never the password itself - just .value.length > 0), and if both are non-empty, click Anmelden/Sign In and see what happens. Only if the fields are empty, or the sign-in is rejected, does the row become NeedsUser. This is the cheap test that the creds.py verdict cannot give you, and it costs one call.
+
 ---
 
 # Portal sections
@@ -628,6 +632,8 @@ StepStone profile login (the user is typically already logged in):
 - (2026-09-14) Shared career4/career5 SuccessFactors credential: 2 of 2 logins worked today (Everllence, AGCO). Both profiles held
   stale documents - AGCO's had a May Anschreiben written for another job; delete stale letters before Bewerben.
 
+- (2026-09-22) Never reload or navigate away from a signed-in career5 portalcareer?_s.crb=... apply page. A Page.reload gave 'You are not authorized' and the direct careers?company=...&career_job_req_id=... URL then showed the sign-in wall again (DLR). Clicking the 'Download document <file>' link (its aria span sits right next to the edit pencil) went to attachmentdownload -> Error, history.back() hit ERR_CACHE_MISS form resubmission, and that session was gone too (BMW). Both handoffs came back from the user already signed in and were lost the same way. Find the edit/attach control by its NN:_attachIcon / pencil id, never by text that includes 'Edit document', and never reload.
+
 ## Taleo
 
 ### Taleo — General
@@ -743,3 +749,5 @@ Two tenants this batch (FZI `recruitingapp-5583`, Baumann `recruitingapp-5313`) 
 - 2026-08-21 — **Four "account wall" NeedsUser rows were false blocks.** DELO, Miele, Eppendorf and elobau were all logged as Workday account walls on 2026-08-15/16 because that session probed `<tenant>/login` and found empty credential boxes. Workday's guest path does not live there: opening **the job's own `/apply` URL** offers "Manuell bewerben" and runs the whole 5-step form with no sign-in (DELO submitted end-to-end this way, Eingangsbestätigung received). **Rule: never conclude "Workday account wall" from the /login page — always open `<job-url>/apply` first and look for "Manuell bewerben".** Same shape of error at SIGNAL IDUNA: "results unreachable" was really just the wrong entry point (jobs.signal-iduna.de serves the job page fine; only the apply click hits the account wall).
 
 - 2026-08-25 — **Not every Workday is an account wall — count the steps.** `heidelberg.wd502` ran a **5-step guest flow with zero password inputs** and submitted end-to-end (proof: redirect to `?Job_Application_ID=<uuid>`). The same day `abb.wd3` and `getec.wd103` both opened "Apply Manually"/"Manuell bewerben" onto **step 1 of 6 = Create Account** with 2 password fields -> NeedsUser. **Classify per tenant by the step count and `input[type=password].length` after clicking Apply; do not write off Workday wholesale.**
+
+- (2026-09-24) Chrome autofill on Workday sign-in is TENANT-SPECIFIC, not a Workday constant. Same session, same method (scrollIntoView the password input, coordinate-click it): ag.wd3 (Airbus) autofilled email+password instantly and signed in; valeo.wd3 left both boxes empty across three attempts (fresh load + password click; type the email first then click password; full reload + 'Sign in with email' + password click), so the row had to be parked for the user even though creds.py rates it STRONG. A STRONG verdict proves the account exists, never that autofill will deliver it - budget one handoff when it does not fire twice.

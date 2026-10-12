@@ -20,10 +20,19 @@ import sys, shutil, os, json, datetime as dt
 MONTHS_DE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
              "August", "September", "Oktober", "November", "Dezember"]
 from docx import Document
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from make_tailored_cv import strip_marks  # noqa: E402
+
+
 def build(pkg, company_lines, subject, paras, date=None, tmpl=None, lang="de", city=None):
     """`tmpl` is your own .docx letterhead for this language - pass it, or set
     JOBAGENT_LETTER_DE / JOBAGENT_LETTER_EN to its path. In practice that is the last
     letter you sent in that language; only the five body paragraphs get replaced."""
+    # Every piece of LLM-written text enters the document here, so this is the
+    # one place that has to drop invisible marks (see strip_marks).
+    company_lines, subject = strip_marks(company_lines), strip_marks(subject)
+    paras = [strip_marks(p) for p in paras]
     if tmpl is None:
         tmpl = os.environ.get("JOBAGENT_LETTER_DE" if lang == "de" else "JOBAGENT_LETTER_EN")
     if not tmpl or not os.path.exists(tmpl):
