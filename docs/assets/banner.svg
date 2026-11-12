@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="340" viewBox="0 0 1280 340" role="img" aria-label="job-application-agent: an autonomous job-application pipeline for coding agents">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="0.55" stop-color="#141b34"/>
+      <stop offset="1" stop-color="#1d1533"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="0.5" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#f0abfc"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.04"/>
+    </pattern>
+    <radialGradient id="glow" cx="0.82" cy="0.2" r="0.6">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .t  { font-family: ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+      .m  { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .chip rect { fill: #ffffff; fill-opacity: 0.06; stroke: #ffffff; stroke-opacity: 0.16; }
+      .chip text { fill: #e2e8f0; font-size: 15px; font-weight: 600; letter-spacing: 1px; }
+      .arrow { fill: none; stroke: #94a3b8; stroke-width: 2; }
+      .pulse { animation: pulse 6s ease-in-out infinite; }
+      .p1 { animation-delay: 0s; } .p2 { animation-delay: 1s; } .p3 { animation-delay: 2s; }
+      .p4 { animation-delay: 3s; } .p5 { animation-delay: 4s; } .p6 { animation-delay: 5s; }
+      @keyframes pulse {
+        0%, 12%, 100% { fill-opacity: 0.06; }
+        5% { fill-opacity: 0.32; }
+      }
+    </style>
+  </defs>
+
+  <rect width="1280" height="340" rx="18" fill="url(#bg)"/>
+  <rect width="1280" height="340" rx="18" fill="url(#grid)"/>
+  <rect width="1280" height="340" rx="18" fill="url(#glow)"/>
+
+  <text x="64" y="104" class="m" fill="#94a3b8" font-size="18">~/job-application-agent $</text>
+  <text x="62" y="160" class="t" fill="url(#accent)" font-size="56" font-weight="800">job-application-agent</text>
+  <text x="64" y="200" class="t" fill="#cbd5e1" font-size="22">An autonomous job-application pipeline for coding agents.</text>
+  <text x="64" y="226" class="t" fill="#94a3b8" font-size="17">One job at a time  ·  every answer true  ·  every lesson written down.</text>
+
+  <!-- pipeline chips -->
+  <g transform="translate(64,262)">
+    <g class="chip"><rect class="pulse p1" width="120" height="40" rx="20"/><text x="60" y="26" text-anchor="middle" class="m">SEARCH</text></g>
+    <path class="arrow" d="M128 20h22m-7-6 7 6-7 6"/>
+    <g class="chip" transform="translate(158,0)"><rect class="pulse p2" width="136" height="40" rx="20"/><text x="68" y="26" text-anchor="middle" class="m">EVALUATE</text></g>
+    <path class="arrow" d="M302 20h22m-7-6 7 6-7 6"/>
+    <g class="chip" transform="translate(332,0)"><rect class="pulse p3" width="128" height="40" rx="20"/><text x="64" y="26" text-anchor="middle" class="m">PREPARE</text></g>
+    <path class="arrow" d="M468 20h22m-7-6 7 6-7 6"/>
+    <g class="chip" transform="translate(498,0)"><rect class="pulse p4" width="104" height="40" rx="20"/><text x="52" y="26" text-anchor="middle" class="m">APPLY</text></g>
+    <path class="arrow" d="M610 20h22m-7-6 7 6-7 6"/>
+    <g class="chip" transform="translate(640,0)"><rect class="pulse p5" width="112" height="40" rx="20"/><text x="56" y="26" text-anchor="middle" class="m">VERIFY</text></g>
+    <path class="arrow" d="M760 20h22m-7-6 7 6-7 6"/>
+    <g class="chip" transform="translate(790,0)"><rect class="pulse p6" width="88" height="40" rx="20"/><text x="44" y="26" text-anchor="middle" class="m">LOG</text></g>
+  </g>
+
+  <!-- stats -->
+  <g class="t" font-size="15" fill="#94a3b8" text-anchor="end">
+    <text x="1216" y="96"><tspan fill="#f0abfc" font-weight="700" font-size="30">51</tspan></text>
+    <text x="1216" y="118">portal playbooks</text>
+    <text x="1216" y="168"><tspan fill="#a78bfa" font-weight="700" font-size="30">30+</tspan></text>
+    <text x="1216" y="190">applications / session</text>
+    <text x="1216" y="240"><tspan fill="#7dd3fc" font-weight="700" font-size="30">0</tspan></text>
+    <text x="1216" y="262">passwords typed by the agent</text>
+  </g>
+</svg>
